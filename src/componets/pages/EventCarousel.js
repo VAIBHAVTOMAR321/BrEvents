@@ -6,6 +6,7 @@ import Showcase from "../../assets/images/education/showcase-6.webp";
 import Slide2Image from "../../assets/images/education/activities-1.webp"; 
 import Slide3Image from "../../assets/images/education/events-1.webp";
 import "../../assets/css/mainstyle.css";
+import "../../assets/css/imageTransitions.css";
 
 // Default stats to use when API doesn't provide data
 const defaultStats = [
@@ -16,6 +17,20 @@ const defaultStats = [
 
 // Default image to use when API doesn't provide one
 const defaultImages = [Showcase, Slide2Image, Slide3Image];
+ 
+// Array of cinematic animation classes for smooth rotation
+const animationClasses = [
+  'carousel-item-animation-kenburns',
+  'carousel-item-animation-pan-right',
+  'carousel-item-animation-pan-down',
+  'carousel-item-animation-kenburns-reverse',
+  'carousel-item-animation-pan-left',
+  'carousel-item-animation-pan-diagonal-tl',
+  'carousel-item-animation-zoom',
+  'carousel-item-animation-pan-diagonal-br',
+  'carousel-item-animation-breathing',
+  'carousel-item-animation-pan-up'
+];
 
 function EventCarousel() {
   const navigate = useNavigate();
@@ -198,6 +213,11 @@ function EventCarousel() {
     console.log(`Successfully loaded image for slide ${slideId}`);
   };
 
+  // Get animation class based on slide index for cinematic effect
+  const getAnimationClass = (slideIndex) => {
+    return animationClasses[slideIndex % animationClasses.length];
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: '500px' }}>
@@ -224,13 +244,23 @@ function EventCarousel() {
         {/* We map over our data array to create a slide for each item */}
         {carouselData.map((slide, slideIndex) => (
           <Carousel.Item key={slide.id}>
-            {/* Inside each Carousel.Item, we place your hero section structure */}
-            <section id="hero" className="hero section hero-area-bg">
+            {/* Inside each Carousel.Item, we place your hero section structure with background image */}
+            <section 
+              id="hero" 
+              className={`hero section hero-area-bg hero-animated-bg ${getAnimationClass(slideIndex)} moving`}
+              style={{
+                backgroundImage: `url(${imageErrors[slide.id] ? defaultImages[slideIndex % defaultImages.length] : slide.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundAttachment: 'fixed'
+              }}
+            >
               <div className="overlay"></div>
               <div className="hero-wrapper">
                 <div className="container">
                   <div className="row align-items-center">
-                    <div className="col-lg-6 hero-content" data-aos="fade-right">
+                    <div className="col-lg-12 hero-content" data-aos="fade-right">
                       <h1>{slide.title}</h1>
                       <p>{slide.subtitle}</p>
                       <div className="stats-row">
@@ -245,27 +275,17 @@ function EventCarousel() {
                         <a href="/registration" className="btn-primary" onClick={openRegistration}>Registration</a>
                       </div>
                     </div>
-                    <div className="col-lg-6 hero-media" data-aos="zoom-in">
-                      {/* Use a fallback image if the original image fails to load */}
-                      {imageErrors[slide.id] ? (
-                        <img 
-                          src={defaultImages[slideIndex % defaultImages.length]} 
-                          alt="Showcase" 
-                          className="img-fluid" 
-                        />
-                      ) : (
-                        <img 
-                          src={slide.image} 
-                          alt="Showcase" 
-                          className="img-fluid" 
-                          onError={() => handleImageError(slide.id, slideIndex)}
-                          onLoad={() => handleImageLoad(slide.id)}
-                        />
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
+              {/* Preload image for smooth transitions */}
+              <img 
+                src={imageErrors[slide.id] ? defaultImages[slideIndex % defaultImages.length] : slide.image} 
+                alt="Background"
+                style={{ display: 'none' }}
+                onError={() => handleImageError(slide.id, slideIndex)}
+                onLoad={() => handleImageLoad(slide.id)}
+              />
 
               {/* Only render the upcoming event section if event data exists */}
               {slide.event && (

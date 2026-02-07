@@ -1,0 +1,580 @@
+/* ============================================
+   ADVANCED IMAGE TRANSITION ANIMATIONS
+   Cinematic, Smooth, GPU-Accelerated Animations
+   ============================================ */
+
+/* ============================================
+   1. KEN BURNS EFFECT (Zoom-In with Pan)
+   ============================================ */
+
+@keyframes kenBurnsZoomPan {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-20px, 20px, 0) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes kenBurnsZoomPanReverse {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(20px, -20px, 0) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes kenBurnsZoomPanCenter {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(10px, -10px, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   2. SMOOTH FADE IN/OUT TRANSITIONS
+   ============================================ */
+
+@keyframes smoothFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes smoothFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   3. SUBTLE PAN ANIMATIONS (Left to Right)
+   ============================================ */
+
+@keyframes subtlePanRight {
+  0% {
+    transform: translate3d(-15px, 0, 0) scale(1.08);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(10px, 0, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes subtlePanLeft {
+  0% {
+    transform: translate3d(15px, 0, 0) scale(1.08);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-10px, 0, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   4. VERTICAL PAN ANIMATIONS (Top to Bottom)
+   ============================================ */
+
+@keyframes subtlePanDown {
+  0% {
+    transform: translate3d(0, -15px, 0) scale(1.08);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 10px, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes subtlePanUp {
+  0% {
+    transform: translate3d(0, 15px, 0) scale(1.08);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, -10px, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   5. DIAGONAL PAN ANIMATIONS
+   ============================================ */
+
+@keyframes subtlePanDiagonalTopLeft {
+  0% {
+    transform: translate3d(20px, 20px, 0) scale(1.1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-15px, -15px, 0) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes subtlePanDiagonalBottomRight {
+  0% {
+    transform: translate3d(-20px, -20px, 0) scale(1.1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(15px, 15px, 0) scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   6. ZOOM WITHOUT PAN (Smooth Scale)
+   ============================================ */
+
+@keyframes gentleZoomIn {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes gentleZoomInMild {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   7. FLOATING/BREATHING EFFECT
+   ============================================ */
+
+@keyframes floatingBreathing {
+  0% {
+    transform: translate3d(0, -5px, 0) scale(1.03);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(0, 5px, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   7.5. CONTINUOUS SLIDING MOVEMENT ANIMATIONS
+   ============================================ */
+
+@keyframes continuousSlideLTR {
+  0% {
+    backgroundPosition: 0% center;
+  }
+  100% {
+    backgroundPosition: 100% center;
+  }
+}
+
+@keyframes continuousSlideRTL {
+  0% {
+    backgroundPosition: 100% center;
+  }
+  100% {
+    backgroundPosition: 0% center;
+  }
+}
+
+@keyframes continuousSlideVerticalDown {
+  0% {
+    backgroundPosition: center 0%;
+  }
+  100% {
+    backgroundPosition: center 100%;
+  }
+}
+
+@keyframes continuousSlideVerticalUp {
+  0% {
+    backgroundPosition: center 100%;
+  }
+  100% {
+    backgroundPosition: center 0%;
+  }
+}
+
+@keyframes continuousParallaxMovement {
+  0% {
+    backgroundPosition: -10% center;
+  }
+  50% {
+    backgroundPosition: 110% center;
+  }
+  100% {
+    backgroundPosition: -10% center;
+  }
+}
+
+/* ============================================
+   8. ANIMATION CLASSES FOR CAROUSEL ITEMS
+   ============================================ */
+
+/* Ken Burns variations */
+.carousel-item-animation-kenburns {
+  animation: kenBurnsZoomPan 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-kenburns-reverse {
+  animation: kenBurnsZoomPanReverse 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-kenburns-center {
+  animation: kenBurnsZoomPanCenter 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Pan animations */
+.carousel-item-animation-pan-right {
+  animation: subtlePanRight 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-pan-left {
+  animation: subtlePanLeft 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-pan-down {
+  animation: subtlePanDown 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-pan-up {
+  animation: subtlePanUp 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Diagonal pan animations */
+.carousel-item-animation-pan-diagonal-tl {
+  animation: subtlePanDiagonalTopLeft 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-pan-diagonal-br {
+  animation: subtlePanDiagonalBottomRight 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Zoom animations */
+.carousel-item-animation-zoom {
+  animation: gentleZoomIn 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.carousel-item-animation-zoom-mild {
+  animation: gentleZoomInMild 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Breathing effect */
+.carousel-item-animation-breathing {
+  animation: floatingBreathing 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Fade animation */
+.carousel-item-animation-fade {
+  animation: smoothFadeIn 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  will-change: opacity;
+}
+
+/* ============================================
+   ENHANCED ANIMATIONS WITH CONTINUOUS MOVEMENT
+   ============================================ */
+
+/* Ken Burns with left-right movement */
+.carousel-item-animation-kenburns.moving {
+  animation: 
+    kenBurnsZoomPan 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 20s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Pan right with continuous movement */
+.carousel-item-animation-pan-right.moving {
+  animation: 
+    subtlePanRight 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 18s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Pan left with continuous movement */
+.carousel-item-animation-pan-left.moving {
+  animation: 
+    subtlePanLeft 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 18s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Pan down with left-right movement */
+.carousel-item-animation-pan-down.moving {
+  animation: 
+    subtlePanDown 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 16s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Pan up with left-right movement */
+.carousel-item-animation-pan-up.moving {
+  animation: 
+    subtlePanUp 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 16s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Zoom with continuous movement */
+.carousel-item-animation-zoom.moving {
+  animation: 
+    gentleZoomIn 6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 18s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Breathing with movement */
+.carousel-item-animation-breathing.moving {
+  animation: 
+    floatingBreathing 7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 20s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* Diagonal animations with movement */
+.carousel-item-animation-pan-diagonal-tl.moving {
+  animation: 
+    subtlePanDiagonalTopLeft 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 22s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+.carousel-item-animation-pan-diagonal-br.moving {
+  animation: 
+    subtlePanDiagonalBottomRight 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+    continuousParallaxMovement 22s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+  animation-fill-mode: forwards, normal;
+}
+
+/* ============================================
+   9. HERO SECTION BACKGROUND ANIMATION
+   ============================================ */
+
+.hero-animated-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: relative;
+  overflow: hidden;
+  /* Add continuous subtle parallax movement */
+  animation: continuousParallaxMovement 15s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+/* For mobile devices, disable background-attachment: fixed due to performance */
+@media (max-width: 768px) {
+  .hero-animated-bg {
+    background-attachment: scroll;
+  }
+
+  /* Reduce animation duration and scale on mobile for better performance */
+  .carousel-item-animation-kenburns,
+  .carousel-item-animation-kenburns-reverse,
+  .carousel-item-animation-kenburns-center {
+    animation-duration: 6s !important;
+  }
+
+  .carousel-item-animation-pan-right,
+  .carousel-item-animation-pan-left,
+  .carousel-item-animation-pan-down,
+  .carousel-item-animation-pan-up {
+    animation-duration: 5s !important;
+  }
+
+  .carousel-item-animation-pan-diagonal-tl,
+  .carousel-item-animation-pan-diagonal-br {
+    animation-duration: 6s !important;
+  }
+
+  .carousel-item-animation-zoom {
+    animation-duration: 5s !important;
+  }
+
+  .carousel-item-animation-breathing {
+    animation-duration: 5s !important;
+  }
+}
+
+/* ============================================
+   10. CAROUSEL ITEM TRANSITIONS
+   ============================================ */
+
+.carousel-item {
+  transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.carousel-item.active {
+  animation: smoothFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ============================================
+   11. ACCESSIBILITY & PERFORMANCE SETTINGS
+   ============================================ */
+
+/* Respect prefers-reduced-motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .carousel-item-animation-kenburns,
+  .carousel-item-animation-kenburns-reverse,
+  .carousel-item-animation-kenburns-center,
+  .carousel-item-animation-pan-right,
+  .carousel-item-animation-pan-left,
+  .carousel-item-animation-pan-down,
+  .carousel-item-animation-pan-up,
+  .carousel-item-animation-pan-diagonal-tl,
+  .carousel-item-animation-pan-diagonal-br,
+  .carousel-item-animation-zoom,
+  .carousel-item-animation-zoom-mild,
+  .carousel-item-animation-breathing,
+  .carousel-item-animation-fade {
+    animation: smoothFadeIn 1s ease-in-out forwards !important;
+    will-change: auto;
+  }
+
+  .carousel-item {
+    transition: opacity 0.3s ease-in-out;
+  }
+}
+
+/* ============================================
+   12. GPU ACCELERATION OPTIMIZATION
+   ============================================ */
+
+.hero {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.hero-wrapper {
+  position: relative;
+  z-index: 10;
+  will-change: auto;
+}
+
+/* ============================================
+   13. SMOOTH COLOR OVERLAY TRANSITIONS
+   ============================================ */
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 5;
+  transition: background-color 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Dynamic overlay opacity based on image brightness - can be adjusted per slide */
+.overlay-light {
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.overlay-medium {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+.overlay-dark {
+  background: rgba(0, 0, 0, 0.6) !important;
+}
