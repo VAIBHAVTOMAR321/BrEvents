@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+@font-face {
+  font-family: 'Poppins', sans-serif;
+}
+
+
+
+body {
+
+  background-color: #F3F3F3;
+
+  font-family: 'Poppins', sans-serif;
+
+
+}
+
+/* svg {
+      fill: #0d77cb;
+    } */
+:root {
+  --bs-breakpoint-xs: 0;
+  --bs-breakpoint-sm: 576px;
+  --bs-breakpoint-md: 768px;
+  --bs-breakpoint-lg: 992px;
+  --bs-breakpoint-xl: 1200px;
+  --bs-breakpoint-xxl: 1400px;
+}
+
+:root {
+
+  --evnt-primary: linear-gradient(to right, #13539d 0%, #1d71ce 100%);
+  --evnt-white: #ffffff;
+  --evnt-blue-dark: #152036;
+  --evnt-blue-dark: #1A202C;
+  --evnt-bg-green: #278557;
+  --evnt-search-border: #CBCBCB;
+  --evnt-black: #000000;
+  --evnt-gray: #4A5568;
+  --evnt-br-dark-bg: #00553c;
+  --evnt-gradient: transparent linear-gradient(180deg, #1973D8 0%, #0B488F 100%);
+
+  --evnt-org: #ffaa18;
+
+  /* custom padding abr margin*/
+  --evnt-space-0: 0px;
+  --evnt-space-25: 1px;
+  --evnt-space-50: 2px;
+  --evnt-space-100: 4px;
+  --evnt-space-175: 5px;
+  --evnt-space-150: 6px;
+  --evnt-space-200: 8px;
+  --evnt-space-250: 10px;
+  --evnt-space-300: 12px;
+  --evnt-space-350: 14px;
+  --evnt-space-400: 16px;
+  --evnt-space-450: 18px;
+  --evnt-space-500: 20px;
+  --evnt-space-550: 22px;
+  --evnt-space-600: 24px;
+  --evnt-space-650: 25px;
+  --evnt-space-700: 28px;
+  --evnt-space-750: 30px;
+  --evnt-space-800: 32px;
+  --evnt-space-900: 36px;
+  --evnt-space-950: 36px;
+  --evnt-space-1000: 40px;
+  --evnt-space-1100: 44px;
+  --evnt-space-1200: 48px;
+}
+
+
+/*
+ * ==================================================
+ * Fix for Testimonials Swiper Layout
+ * ==================================================
+ */
+
+/*
+ * ==================================================
+ * REQUIRED CSS for Testimonials Swiper
+ * ==================================================
+ */
+
+/* Ensure the slider container has a position for the navigation buttons */
+.testimonial-slider {
+  position: relative;
+}
+
+/* This ensures the Swiper wrapper uses flexbox to align slides. */
+.testimonial-slider .swiper-wrapper {
+  display: flex;
+  align-items: stretch; /* Makes all cards in a row the same height */
+}
+
+/* This ensures each slide behaves correctly. */
+.testimonial-slider .swiper-slide {
+
+  flex-shrink: 0;
+}
+
+/* This makes the inner card fill the slide area. */
+.testimonial-slider .testimonial-item {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.login-btn{
+  font-size: 12px;
+  background-color: #ffff !important;
+  border: 1px solid #ffff  !important;
+  color: #000000;
+   margin-top: 8px !important;
+}
+.table-responsive-container {
+  overflow-x: auto;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.t-style{
+  color: black !important;
+}
+.star{
+  color: red !important;
+}
+.table-th th{
+  background-color: #0d77cb !important;
+  color: #ffffff !important;
+}
+.ay-box-container {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px #00000014, 0 4px 10px #0000000a;
+    margin-top: 20px;
+    padding: 40px;
+    position: relative;
+    z-index: 2;
+}
+.p-body-4{
+  padding: 70px !important;
+}
+.card-header h5{
+  font-size: 18px !important;
+  color: #0d77cb !important;
+  font-weight: 700 !important;
+}
+.login-btn:hover{
+  background-color: #0d77cb !important;
+  border: 1px solid #0d77cb  !important;
+  color: #ffffff;
+  margin-top: 8px !important;
+} 
+/* --- IMPORTANT: Make the navigation buttons visible --- */
+.testimonial-slider .swiper-button-prev,
+.testimonial-slider .swiper-button-next {
+  color: #fff; /* Change to a color that is visible on your background */
+  background-color: rgba(0, 0, 0, 0.3); /* Add a semi-transparent background */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  margin-top: -22px; /* Center the button vertically */
+}
+.event-date-overlay{
+  padding: 12px 12px 0px 12px;
+  color: #FF809F;
+  font-weight: 600;
+}
+.gallery-info  h3{
+  font-size: 24px;
+  color: #000;
+  font-weight: 600;
+}
+.gallery-card{
+  /* background-color: var(--surface-color); */
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px 
+ color-mix(in srgb, var(--default-color), transparent 90%);
+    transition: all 0.4s ease;
+    height: 100%;
+}
+.other-items h4{
+  font-size: 1.3rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+    position: relative;
+    padding-left: 15px;
+    color: #010608;
+}
+.services-list h5{
+  font-weight: 700;
+}
+.tab-style {
+  background-Color: #2e68cc;
+        padding: 8px 16px;
+        color:#fff;
+        border-Radius: 4px;
+        display: inline-block;
+        font-size:14px;
+
+}
+.per-tab{
+  background-color: #000;
+}
+.service-content h4{
+  font-weight: 700;
+  font-size: 18px;
+}
+.profile-photo{
+  width: 130px;
+  height: 130px;
+}
+.testimonial-slider .swiper-button-prev::after,
+.testimonial-slider .swiper-button-next::after {
+  font-size: 20px; /* Adjust arrow size */
+}
+.modal-p p{
+  color: black;
+  font-weight: 600;
+}
+.event-cancel-right{
+  margin-right: 12px;
+}
+.link-add{
+  font-size: 8px;
+}
+.logo{
+  font-size: 18px !important;
+}
+.trilok-submit-btn{
+  background-color: #000;
+  border: 1px solid #000;
+}
+.box-shadow-reg {
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px #00000014, 0 4px 10px #0000000a;
+    margin-top: 20px;
+    /* padding: 40px; */
+    padding-top: 8px;
+    position: relative;
+    z-index: 2;
+}
+.Login-page h1{
+  
+}
+/* Mobile dropdown styles */
+@media (max-width: 991.98px) {
+  .navmenu ul li.dropdown > ul {
+    display: none;
+    position: static;
+    box-shadow: none;
+    width: 100%;
+    padding-left: 20px;
+  }
+  
+  .navmenu ul li.dropdown.dropdown-active > ul {
+    display: block;
+  }
+  
+  .navmenu ul li.dropdown > a i.toggle-dropdown {
+    transition: transform 0.3s;
+  }
+  
+  .navmenu ul li.dropdown > a i.rotate-icon {
+    transform: rotate(180deg);
+  }
+}

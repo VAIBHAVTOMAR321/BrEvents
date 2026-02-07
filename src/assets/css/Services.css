@@ -1,0 +1,36 @@
+.box-shadow{
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px #00000014, 0 4px 10px #0000000a;
+    margin-top: 20px;
+    padding: 40px;
+    position: relative;
+    z-index: 2;
+}
+.gallery-banner {
+    background-position: 50%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    padding: var(--br-space-700);
+}
+
+.gallery-banner {
+    background-image: url("../images/bg-img.jpg");
+}
+.site-breadcrumb-wpr{
+    text-align: center;
+    color: #fff;
+}
+.site-breadcrumb-wpr h2{
+    color: #fff;
+}
+.breadcrumb-home{
+        color: #fff;
+}
+.breadcrumb-about{
+    color: #fff;
+}
+.section-gallery{
+    padding: 0px !important;
+}
+
