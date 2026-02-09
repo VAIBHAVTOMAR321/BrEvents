@@ -15,8 +15,11 @@ const AddCarousel = () => {
   // Form state
   const [formData, setFormData] = useState({
     title: "",
+    title_hi: "",
     sub_title: "",
+    sub_title_hi: "",
     description: "",
+    description_hi: "",
     image: null
   });
   
@@ -77,9 +80,13 @@ const AddCarousel = () => {
     
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("sub_title", formData.sub_title);
-      formDataToSend.append("description", formData.description);
+      formDataToSend.append("title", formData.title.trim());
+      formDataToSend.append("title_hi", formData.title_hi.trim());
+      formDataToSend.append("sub_title", formData.sub_title.trim());
+      formDataToSend.append("sub_title_hi", formData.sub_title_hi.trim());
+      formDataToSend.append("description", formData.description.trim());
+      formDataToSend.append("description_hi", formData.description_hi.trim());
+      
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
@@ -99,15 +106,18 @@ const AddCarousel = () => {
         // Reset form
         setFormData({
           title: "",
+          title_hi: "",
           sub_title: "",
+          sub_title_hi: "",
           description: "",
+          description_hi: "",
           image: null
         });
         setImagePreview(null);
         
         // Optionally redirect after a delay
         setTimeout(() => {
-          navigate("/ManageCarousel"); // Change this to your actual list page
+          navigate("/ManageCarousel");
         }, 2000);
       } else {
         setError(data.message || "Failed to add carousel item");
@@ -146,40 +156,90 @@ const AddCarousel = () => {
                     {success && <Alert variant="success">{success}</Alert>}
                     
                     <Form onSubmit={handleSubmit}>
-                      <Form.Group className="mb-3" controlId="title">
-                        <Form.Label>Title *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="Enter title"
-                          name="title"
-                          value={formData.title}
-                          onChange={handleChange}
-                          required
-                        />
-                      </Form.Group>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="title">
+                            <Form.Label>Title (English) *</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="Enter title in English"
+                              name="title"
+                              value={formData.title}
+                              onChange={handleChange}
+                              required
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="title_hi">
+                            <Form.Label>Title (हिंदी) *</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="हिंदी में शीर्षक दर्ज करें"
+                              name="title_hi"
+                              value={formData.title_hi}
+                              onChange={handleChange}
+                              required
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
                       
-                      <Form.Group className="mb-3" controlId="sub_title">
-                        <Form.Label>Subtitle</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="Enter subtitle"
-                          name="sub_title"
-                          value={formData.sub_title}
-                          onChange={handleChange}
-                        />
-                      </Form.Group>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="sub_title">
+                            <Form.Label>Subtitle (English)</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="Enter subtitle in English"
+                              name="sub_title"
+                              value={formData.sub_title}
+                              onChange={handleChange}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="sub_title_hi">
+                            <Form.Label>Subtitle (हिंदी)</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="हिंदी में उपशीर्षक दर्ज करें"
+                              name="sub_title_hi"
+                              value={formData.sub_title_hi}
+                              onChange={handleChange}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
                       
-                      <Form.Group className="mb-3" controlId="description">
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          placeholder="Enter description"
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                        />
-                      </Form.Group>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="description">
+                            <Form.Label>Description (English)</Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={4}
+                              placeholder="Enter description in English"
+                              name="description"
+                              value={formData.description}
+                              onChange={handleChange}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3" controlId="description_hi">
+                            <Form.Label>Description (हिंदी)</Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={4}
+                              placeholder="हिंदी में विवरण दर्ज करें"
+                              name="description_hi"
+                              value={formData.description_hi}
+                              onChange={handleChange}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
                       
                       <Form.Group className="mb-4" controlId="image">
                         <Form.Label>Image</Form.Label>

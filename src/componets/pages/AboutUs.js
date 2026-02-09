@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../assets/images/education/campus-5.webp";
 import "../../assets/css/imageTransitions.css";
+import { useLanguage } from '../context/LanguageContext';
 
 // Array of smooth animation classes that pan/move within container bounds
 const animationClasses = [
@@ -19,7 +20,8 @@ function AboutUs() {
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [animationIndex, setAnimationIndex] = useState(0);
-  const id = 3;
+  const { language } = useLanguage();
+  const id = 8;  // Changed from 3 to 8 to match API endpoint
   
   // Cycle through animations every 8 seconds
   useEffect(() => {
@@ -33,27 +35,39 @@ function AboutUs() {
   // Fetch about us data from API
   useEffect(() => {
     const fetchAboutData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/aboutus-item/?id=${id}`);
+        const langParam = language === 'hi' ? 'hi' : 'en';
+        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/aboutus-item/?lang=${langParam}&id=${id}`;
+        
+        console.log(`Fetching About Us from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('About Us API Response:', data); // Debug log
+        console.log(`About Us API Response (${langParam}):`, data);
         
         if (data.success && data.data) {
           setAboutData(data.data);
+          setError(null);
         } else {
-          throw new Error('No about us data available');
+          const errorMessage = data.message || 'No about us data available';
+          console.error('API returned error:', errorMessage);
+          setError(errorMessage);
+          setAboutData(null);
         }
       } catch (err) {
         console.error('Error fetching about us data:', err);
-        setError(err.message);
+        setError(err.message || 'Failed to fetch about us data');
+        setAboutData(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAboutData();
-  }, []);
+  }, [language]);
 
   // Handle image loading errors
   const handleImageError = () => {
@@ -66,35 +80,53 @@ function AboutUs() {
     return animationClasses[animationIndex];
   };
 
+  // Get field names based on language
+  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
+  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
+  const getModuleField = () => language === 'hi' ? 'module_hi' : 'module';
+
   // Extract timeline items from module array
   const getTimelineItems = () => {
-    if (!aboutData || !aboutData.module) return [];
+    if (!aboutData) return [];
     
-    return aboutData.module.filter(item => {
-      return item.title && 
-             typeof item.title === 'string' &&
-             item.description && 
-             typeof item.description === 'string' &&
-             item.description.trim() !== '' && 
-             !item.title.toLowerCase().includes('mission') && 
-             !item.title.toLowerCase().includes('vision') &&
-             /^\d+$/.test(item.title) && 
-             item.title.length <= 4;
+    const moduleField = getModuleField();
+    const modules = aboutData[moduleField];
+    
+    if (!modules) return [];
+    
+    return modules.filter(item => {
+      return Array.isArray(item) &&
+             item[0] && 
+             typeof item[0] === 'string' &&
+             item[1] && 
+             typeof item[1] === 'string' &&
+             item[1].trim() !== '' && 
+             !item[0].toLowerCase().includes('mission') && 
+             !item[0].toLowerCase().includes('vision') &&
+             !item[0].toLowerCase().includes('मिशन') && 
+             !item[0].toLowerCase().includes('विज़न') &&
+             /^\d+$/.test(item[0]) && 
+             item[0].length <= 4;
     });
   };
 
   // Extract mission and vision from module array
   const getMissionVision = () => {
-    if (!aboutData || !aboutData.module) return { mission: null, vision: null };
+    if (!aboutData) return { mission: null, vision: null };
     
-    const mission = aboutData.module.find(item => 
-      item.title && typeof item.title === 'string' && 
-      item.title.toLowerCase().includes('mission')
+    const moduleField = getModuleField();
+    const modules = aboutData[moduleField];
+    
+    if (!modules) return { mission: null, vision: null };
+    
+    const mission = modules.find(item => 
+      Array.isArray(item) && 
+      (item[0].toLowerCase().includes('mission') || item[0].toLowerCase().includes('मिशन'))
     );
     
-    const vision = aboutData.module.find(item => 
-      item.title && typeof item.title === 'string' &&
-      item.title.toLowerCase().includes('vision')
+    const vision = modules.find(item => 
+      Array.isArray(item) &&
+      (item[0].toLowerCase().includes('vision') || item[0].toLowerCase().includes('विज़न'))
     );
     
     return { mission, vision };
@@ -102,19 +134,24 @@ function AboutUs() {
 
   // Extract all other module items (not timeline, mission, or vision)
   const getOtherItems = () => {
-    if (!aboutData || !aboutData.module) return [];
+    if (!aboutData) return [];
+    
+    const moduleField = getModuleField();
+    const modules = aboutData[moduleField];
+    
+    if (!modules) return [];
     
     const timelineItems = getTimelineItems();
     const { mission, vision } = getMissionVision();
     
-    return aboutData.module.filter(item => {
+    return modules.filter(item => {
       // Skip if it's a timeline item, mission, or vision
       if (timelineItems.includes(item)) return false;
       if (mission === item) return false;
       if (vision === item) return false;
       
       // Only include items with both title and description
-      return item.title && item.description && item.description.trim() !== '';
+      return Array.isArray(item) && item[0] && item[1] && item[1].trim() !== '';
     });
   };
 
@@ -161,10 +198,10 @@ function AboutUs() {
           <div className="row align-items-center g-5">
             <div className="col-lg-6">
               <div className="about-content mt-4" data-aos="fade-up" data-aos-delay="200">
-                <h2>{aboutData ? aboutData.title : "Educating Minds, Inspiring Hearts"}</h2>
+                <h2>{aboutData ? aboutData[getTitleField()] : "Educating Minds, Inspiring Hearts"}</h2>
                 <p>
                   {aboutData ? 
-                    aboutData.description : 
+                    aboutData[getDescriptionField()] : 
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vitae odio ac nisi tristique venenatis. Nullam feugiat ipsum vitae justo finibus, in sagittis dolor malesuada. Aenean vel fringilla est, a vulputate massa."
                   }
                 </p>
@@ -174,8 +211,8 @@ function AboutUs() {
                   <div className="other-items mt-4">
                     {otherItems.map((item, index) => (
                       <div className="mb-4" key={index}>
-                        <h4>{item.title}</h4>
-                        <p>{item.description}</p>
+                        <h4>{item[0]}</h4>
+                        <p>{item[1]}</p>
                       </div>
                     ))}
                   </div>
@@ -184,13 +221,13 @@ function AboutUs() {
                 {/* Display timeline items */}
                 {timelineItems.length > 0 && (
                   <div className="timeline mt-4">
-                    <h3 className="mb-4">Our Journey</h3>
+                    <h3 className="mb-4">{language === 'hi' ? 'हमारी यात्रा' : 'Our Journey'}</h3>
                     {timelineItems.map((item, index) => (
                       <div className="timeline-item" key={index}>
                         <div className="timeline-dot"></div>
                         <div className="timeline-content">
-                          <h3>{item.title}</h3>
-                          <p>{item.description}</p>
+                          <h3>{item[0]}</h3>
+                          <p>{item[1]}</p>
                         </div>
                       </div>
                     ))}
@@ -211,15 +248,15 @@ function AboutUs() {
                 <div className="mission-vision mt-4" data-aos="fade-up" data-aos-delay="400">
                   {mission && (
                     <div className="mission mb-4">
-                      <h3>{mission.title}</h3>
-                      <p>{mission.description}</p>
+                      <h3>{mission[0]}</h3>
+                      <p>{mission[1]}</p>
                     </div>
                   )}
 
                   {vision && (
                     <div className="vision">
-                      <h3>{vision.title}</h3>
-                      <p>{vision.description}</p>
+                      <h3>{vision[0]}</h3>
+                      <p>{vision[1]}</p>
                     </div>
                   )}
                 </div>

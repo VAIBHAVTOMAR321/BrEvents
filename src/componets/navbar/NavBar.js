@@ -5,6 +5,7 @@ import EventLogo from '../../assets/images/br-event-logo.png'
 import { Button, Container } from 'react-bootstrap';
 import { FaPhone } from "react-icons/fa6";
 import { FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, FaLinkedin, FaGlobe, FaEnvelope } from 'react-icons/fa';
+import { useLanguage } from '../context/LanguageContext';
 
 function NavBar() {
   const [companies, setCompanies] = useState([]);
@@ -12,6 +13,7 @@ function NavBar() {
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState({});
+  const { language, toggleLanguage } = useLanguage();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -112,10 +114,21 @@ function NavBar() {
                   </li>
                 ))}
               </ul>
-              <ul className="list-unstyled mb-0">
+              <ul className="list-unstyled mb-0 d-flex align-items-center">
                 <li>
-                  <Link to="/Login" className="btn btn-primary login-btn">Login</Link>
-                  <Link to="/Registration" className="btn btn-primary login-btn mx-3">Register</Link>
+                  <Button 
+                    variant={language === 'en' ? 'primary' : 'outline-primary'} 
+                    size="sm"
+                    onClick={toggleLanguage}
+                    className="me-2"
+                    style={{ minWidth: '60px' }}
+                  >
+                    {language === 'en' ? 'हिंदी' : 'English'}
+                  </Button>
+                </li>
+                <li>
+                  <Link to="/Login" className="btn btn-primary login-btn mx-2">Login</Link>
+                  <Link to="/Registration" className="btn btn-primary login-btn mx-2">Register</Link>
                 </li>
               </ul>
             </div>
@@ -131,7 +144,18 @@ function NavBar() {
                   </li>
                 ))}
               </ul>
-              <ul className="list-unstyled mb-0 ms-3">
+              <ul className="list-unstyled mb-0 ms-3 d-flex align-items-center">
+                <li>
+                  <Button 
+                    variant={language === 'en' ? 'primary' : 'outline-primary'} 
+                    size="sm"
+                    onClick={toggleLanguage}
+                    className="me-2"
+                    style={{ minWidth: '60px' }}
+                  >
+                    {language === 'en' ? 'हिंदी' : 'English'}
+                  </Button>
+                </li>
                 <li>
                   <Link to="/Login" className="btn btn-primary login-btn">Login</Link>
                   <Link to="/Registration" className="btn btn-primary login-btn mx-3">Register</Link>

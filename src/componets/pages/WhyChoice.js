@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../assets/images/education/campus-5.webp";
 import "../../assets/css/imageTransitions.css";
+import { useLanguage } from '../context/LanguageContext';
 
 // Array of smooth animation classes that pan/move within container bounds
 const animationClasses = [
@@ -19,7 +20,8 @@ function WhyChoice() {
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
   const [animationIndex, setAnimationIndex] = useState(0);
-  const id = 5;
+  const { language } = useLanguage();
+  const id = 10;  // Changed from 5 to 9 to match API endpoint
   
   // Cycle through animations every 8 seconds
   useEffect(() => {
@@ -33,27 +35,39 @@ function WhyChoice() {
   // Fetch about us data from API
   useEffect(() => {
     const fetchAboutData = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await fetch(`https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/aboutus-item/?id=${id}`);
+        const langParam = language === 'hi' ? 'hi' : 'en';
+        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/aboutus-item/?lang=${langParam}&id=${id}`;
+        
+        console.log(`Fetching Why Choose Us from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('About Us API Response:', data); // Debug log
+        console.log(`Why Choose Us API Response (${langParam}):`, data);
         
         if (data.success && data.data) {
           setAboutData(data.data);
+          setError(null);
         } else {
-          throw new Error('No about us data available');
+          const errorMessage = data.message || 'No data available';
+          console.error('API returned error:', errorMessage);
+          setError(errorMessage);
+          setAboutData(null);
         }
       } catch (err) {
-        console.error('Error fetching about us data:', err);
-        setError(err.message);
+        console.error('Error fetching why choose us data:', err);
+        setError(err.message || 'Failed to fetch data');
+        setAboutData(null);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAboutData();
-  }, []);
+  }, [language]);
 
   // Handle image loading errors
   const handleImageError = () => {
@@ -61,77 +75,53 @@ function WhyChoice() {
     setImageError(true);
   };
 
+  // Get field names based on language
+  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
+  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
+  const getModuleField = () => language === 'hi' ? 'module_hi' : 'module';
+
   // Get current animation class
   const getAnimationClass = () => {
     return animationClasses[animationIndex];
   };
 
-  // Extract timeline items from module array
-  const getTimelineItems = () => {
-    if (!aboutData || !aboutData.module) return [];
-    
-    return aboutData.module.filter(item => {
-      // Check if it's an object with title and description
-      if (!item || typeof item !== 'object') return false;
-      
-      const title = item.title ? item.title.toString().trim() : '';
-      const description = item.description ? item.description.toString().trim() : '';
-      
-      // Ensure description is not empty
-      if (!description) return false;
-      
-      // Filter out mission and vision items
-      const titleLower = title.toLowerCase();
-      if (titleLower.includes('mission') || titleLower.includes('vision')) return false;
-      
-      // Check if title is a year (4 digits)
-      if (!/^\d{4}$/.test(title)) return false;
-      
-      return true;
-    });
-  };
-
-  // Extract features from module array (items with empty titles)
+  // Extract features from module array
   const getFeatures = () => {
-    if (!aboutData || !aboutData.module) return [];
+    if (!aboutData) return [];
     
-    return aboutData.module.filter(item => {
-      // Check if it's an object with title and description
-      if (!item || typeof item !== 'object') return false;
-      
-      const title = item.title ? item.title.toString().trim() : '';
-      const description = item.description ? item.description.toString().trim() : '';
-      
-      // Ensure description is not empty and title is empty
-      if (!description || title) return false;
-      
-      return true;
+    const moduleField = getModuleField();
+    const modules = aboutData[moduleField];
+    
+    if (!modules || !Array.isArray(modules)) return [];
+    
+    return modules.filter(item => {
+      return Array.isArray(item) && 
+             item[0] && 
+             typeof item[0] === 'string' &&
+             item[1] && 
+             typeof item[1] === 'string' &&
+             item[1].trim() !== '';
     });
   };
 
   // Extract mission and vision from module array
   const getMissionVision = () => {
-    if (!aboutData || !aboutData.module) return { mission: null, vision: null };
+    if (!aboutData) return { mission: null, vision: null };
     
-    let mission = null;
-    let vision = null;
+    const moduleField = getModuleField();
+    const modules = aboutData[moduleField];
     
-    aboutData.module.forEach(item => {
-      if (!item || typeof item !== 'object') return;
-      
-      const title = item.title ? item.title.toString().trim() : '';
-      const description = item.description ? item.description.toString().trim() : '';
-      
-      if (!title || !description) return;
-      
-      const titleLower = title.toLowerCase();
-      
-      if (titleLower.includes('mission')) {
-        mission = { title, description };
-      } else if (titleLower.includes('vision')) {
-        vision = { title, description };
-      }
-    });
+    if (!modules || !Array.isArray(modules)) return { mission: null, vision: null };
+    
+    const mission = modules.find(item => 
+      Array.isArray(item) && 
+      (item[0].toLowerCase().includes('mission') || item[0].toLowerCase().includes('मिशन'))
+    );
+    
+    const vision = modules.find(item => 
+      Array.isArray(item) &&
+      (item[0].toLowerCase().includes('vision') || item[0].toLowerCase().includes('विज़न'))
+    );
     
     return { mission, vision };
   };
@@ -168,7 +158,6 @@ function WhyChoice() {
     );
   }
 
-  const timelineItems = getTimelineItems();
   const { mission, vision } = getMissionVision();
   const features = getFeatures();
   const imageUrl = getImageUrl();
@@ -178,10 +167,10 @@ function WhyChoice() {
       <section id="about" className="about section">
         <div className="container container-box-title" data-aos="fade-up" data-aos-delay="100">
            
-                <h2>{aboutData ? aboutData.title : "Educating Minds, Inspiring Hearts"}</h2>
+                <h2>{aboutData ? aboutData[getTitleField()] : "Why Choose Us"}</h2>
                 <p>
                   {aboutData ? 
-                    aboutData.description : 
+                    aboutData[getDescriptionField()] : 
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vitae odio ac nisi tristique venenatis. Nullam feugiat ipsum vitae justo finibus, in sagittis dolor malesuada. Aenean vel fringilla est, a vulputate massa."
                   }
                 </p>
@@ -204,30 +193,15 @@ function WhyChoice() {
                 {/* Display features if available */}
                 {features.length > 0 && (
                   <div className="features-list mt-4">
-                    <h4>Why Choose Us</h4>
+                    <h4>{language === 'hi' ? 'हमें क्यों चुनें' : 'Why Choose Us'}</h4>
                     <ul className="list-unstyled">
                       {features.map((item, index) => (
                         <li key={index} className="mb-3">
                           <i className="bi bi-check-circle-fill text-primary me-2"></i>
-                          {item.description}
+                          {item[1]}
                         </li>
                       ))}
                     </ul>
-                  </div>
-                )}
-
-                {/* Display timeline if available */}
-                {timelineItems.length > 0 && (
-                  <div className="timeline mt-4">
-                    {timelineItems.map((item, index) => (
-                      <div className="timeline-item" key={index}>
-                        <div className="timeline-dot"></div>
-                        <div className="timeline-content">
-                          <h4>{item.title}</h4>
-                          <p>{item.description}</p>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
@@ -243,16 +217,16 @@ function WhyChoice() {
                     {mission && (
                       <div className="col-md-6 mb-4">
                         <div className="mission h-100 p-4 bg-light rounded">
-                          <h3>{mission.title}</h3>
-                          <p>{mission.description}</p>
+                          <h3>{mission[0]}</h3>
+                          <p>{mission[1]}</p>
                         </div>
                       </div>
                     )}
                     {vision && (
                       <div className="col-md-6 mb-4">
                         <div className="vision h-100 p-4 bg-light rounded">
-                          <h3>{vision.title}</h3>
-                          <p>{vision.description}</p>
+                          <h3>{vision[0]}</h3>
+                          <p>{vision[1]}</p>
                         </div>
                       </div>
                     )}

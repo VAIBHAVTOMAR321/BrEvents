@@ -9,6 +9,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { LanguageProvider } from "./componets/context/LanguageContext";
 
 
 import Home from "./componets/pages/Home";
@@ -100,7 +101,7 @@ function App() {
   const shouldHideNavbar = hiddenPaths.has(location.pathname);
   
   return (
-    
+    <LanguageProvider>
       <div className="app-container">
         {!shouldHideNavbar && <NavBar />}
         
@@ -272,6 +273,7 @@ function App() {
            {!shouldHideNavbar && <Footer />}
       
       </div>
+    </LanguageProvider>
  
   );
 }

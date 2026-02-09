@@ -22,7 +22,9 @@ const ManageAboutUs = () => {
   const [formData, setFormData] = useState({
     id: null,
     title: "",
+    title_hi: "",
     description: "",
+    description_hi: "",
     image: null,
     imagePreview: null,
     page: 1,
@@ -141,26 +143,58 @@ const ManageAboutUs = () => {
         }
 
         // Process modules to ensure consistent format
-        const processedModules = itemData.module ? itemData.module.map(moduleItem => {
-          if (typeof moduleItem === 'string') {
-            return { title: moduleItem, description: "" };
-          } else if (moduleItem && typeof moduleItem === 'object') {
-            return {
-              title: moduleItem.title || "",
-              description: moduleItem.description || ""
-            };
+        // The API returns modules as arrays: [[title, desc], [title, desc]]
+        const processedModules = [];
+        if (itemData.module && itemData.module_hi) {
+          for (let i = 0; i < itemData.module.length; i++) {
+            const moduleEn = itemData.module[i];
+            const moduleHi = itemData.module_hi[i];
+            
+            processedModules.push({
+              title: Array.isArray(moduleEn) ? moduleEn[0] : "",
+              description: Array.isArray(moduleEn) ? moduleEn[1] : "",
+              title_hi: Array.isArray(moduleHi) ? moduleHi[0] : "",
+              description_hi: Array.isArray(moduleHi) ? moduleHi[1] : ""
+            });
           }
-          return { title: "", description: "" };
-        }) : [];
+        } else if (itemData.module) {
+          // Fallback if Hindi modules don't exist
+          itemData.module.forEach(moduleItem => {
+            if (Array.isArray(moduleItem)) {
+              processedModules.push({
+                title: moduleItem[0] || "",
+                description: moduleItem[1] || "",
+                title_hi: "",
+                description_hi: ""
+              });
+            } else if (typeof moduleItem === 'string') {
+              processedModules.push({
+                title: moduleItem,
+                description: "",
+                title_hi: "",
+                description_hi: ""
+              });
+            } else if (moduleItem && typeof moduleItem === 'object') {
+              processedModules.push({
+                title: moduleItem.title || "",
+                description: moduleItem.description || "",
+                title_hi: moduleItem.title_hi || "",
+                description_hi: moduleItem.description_hi || ""
+              });
+            }
+          });
+        }
 
         // Process image URL
         const imageUrl = itemData.image ? `${BASE_URL}${itemData.image}` : null;
 
         setFormData({
           id: itemData.id,
-          title: itemData.title,
-          description: itemData.description,
-          image: null, // We don't store the actual image file, just the URL
+          title: itemData.title || "",
+          title_hi: itemData.title_hi || "",
+          description: itemData.description || "",
+          description_hi: itemData.description_hi || "",
+          image: null,
           imagePreview: imageUrl,
           page: itemData.page || 1,
           modules: processedModules
@@ -216,7 +250,7 @@ const ManageAboutUs = () => {
   const addModule = () => {
     setFormData((prev) => ({
       ...prev,
-      modules: [...prev.modules, { title: "", description: "" }]
+      modules: [...prev.modules, { title: "", description: "", title_hi: "", description_hi: "" }]
     }));
   };
 
@@ -268,7 +302,9 @@ const ManageAboutUs = () => {
     setFormData({
       id: null,
       title: "",
+      title_hi: "",
       description: "",
+      description_hi: "",
       image: null,
       imagePreview: null,
       page: 1,
@@ -287,12 +323,25 @@ const ManageAboutUs = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title);
-      formDataToSend.append("description", formData.description);
+      formDataToSend.append("title", formData.title.trim());
+      formDataToSend.append("title_hi", formData.title_hi.trim());
+      formDataToSend.append("description", formData.description.trim());
+      formDataToSend.append("description_hi", formData.description_hi.trim());
       formDataToSend.append("page", formData.page);
       
-      // Add modules as JSON string
-      formDataToSend.append("module", JSON.stringify(formData.modules));
+      // Format modules as array format for both English and Hindi
+      const modulesEn = formData.modules.map(module => [
+        module.title.trim(),
+        module.description.trim()
+      ]);
+      
+      const modulesHi = formData.modules.map(module => [
+        module.title_hi.trim(),
+        module.description_hi.trim()
+      ]);
+      
+      formDataToSend.append("module", JSON.stringify(modulesEn));
+      formDataToSend.append("module_hi", JSON.stringify(modulesHi));
       
       if (formData.image) {
         formDataToSend.append("image", formData.image);
@@ -650,32 +699,69 @@ const ManageAboutUs = () => {
                       </Card.Header>
                       <Card.Body>
                         <Form onSubmit={handleSubmit}>
-                          <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control
-                              type="text"
-                              placeholder="Enter about us item title"
-                              name="title"
-                              value={formData.title}
-                              onChange={handleChange}
-                              required
-                              disabled={!isEditing}
-                            />
-                          </Form.Group>
+                          <Row>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Title (English)</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="Enter about us item title in English"
+                                  name="title"
+                                  value={formData.title}
+                                  onChange={handleChange}
+                                  required
+                                  disabled={!isEditing}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Title (हिंदी)</Form.Label>
+                                <Form.Control
+                                  type="text"
+                                  placeholder="हिंदी में शीर्षक दर्ज करें"
+                                  name="title_hi"
+                                  value={formData.title_hi}
+                                  onChange={handleChange}
+                                  required
+                                  disabled={!isEditing}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
 
-                          <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              rows={4}
-                              placeholder="Enter about us item description"
-                              name="description"
-                              value={formData.description}
-                              onChange={handleChange}
-                              required
-                              disabled={!isEditing}
-                            />
-                          </Form.Group>
+                          <Row>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Description (English)</Form.Label>
+                                <Form.Control
+                                  as="textarea"
+                                  rows={4}
+                                  placeholder="Enter about us item description in English"
+                                  name="description"
+                                  value={formData.description}
+                                  onChange={handleChange}
+                                  required
+                                  disabled={!isEditing}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Description (हिंदी)</Form.Label>
+                                <Form.Control
+                                  as="textarea"
+                                  rows={4}
+                                  placeholder="हिंदी में विवरण दर्ज करें"
+                                  name="description_hi"
+                                  value={formData.description_hi}
+                                  onChange={handleChange}
+                                  required
+                                  disabled={!isEditing}
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
 
                           <Form.Group className="mb-3">
                             <Form.Label>Page</Form.Label>
@@ -739,27 +825,54 @@ const ManageAboutUs = () => {
                                   )}
                                 </Card.Header>
                                 <Card.Body>
-                                  <Form.Group className="mb-3">
-                                    <Form.Label>Module Title</Form.Label>
-                                    <Form.Control
-                                      type="text"
-                                      placeholder="Enter module title"
-                                      value={module.title}
-                                      onChange={(e) => handleModuleChange(index, 'title', e.target.value)}
-                                      disabled={!isEditing}
-                                    />
-                                  </Form.Group>
-                                  <Form.Group>
-                                    <Form.Label>Module Description</Form.Label>
-                                    <Form.Control
-                                      as="textarea"
-                                      rows={3}
-                                      placeholder="Enter module description"
-                                      value={module.description}
-                                      onChange={(e) => handleModuleChange(index, 'description', e.target.value)}
-                                      disabled={!isEditing}
-                                    />
-                                  </Form.Group>
+                                  <Row>
+                                    <Col md={6}>
+                                      <Form.Group className="mb-3">
+                                        <Form.Label>Module Title (English)</Form.Label>
+                                        <Form.Control
+                                          type="text"
+                                          placeholder="Enter module title in English"
+                                          value={module.title}
+                                          onChange={(e) => handleModuleChange(index, 'title', e.target.value)}
+                                          disabled={!isEditing}
+                                        />
+                                      </Form.Group>
+                                      <Form.Group>
+                                        <Form.Label>Module Description (English)</Form.Label>
+                                        <Form.Control
+                                          as="textarea"
+                                          rows={3}
+                                          placeholder="Enter module description in English"
+                                          value={module.description}
+                                          onChange={(e) => handleModuleChange(index, 'description', e.target.value)}
+                                          disabled={!isEditing}
+                                        />
+                                      </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                      <Form.Group className="mb-3">
+                                        <Form.Label>Module Title (हिंदी)</Form.Label>
+                                        <Form.Control
+                                          type="text"
+                                          placeholder="हिंदी में मॉड्यूल शीर्षक दर्ज करें"
+                                          value={module.title_hi}
+                                          onChange={(e) => handleModuleChange(index, 'title_hi', e.target.value)}
+                                          disabled={!isEditing}
+                                        />
+                                      </Form.Group>
+                                      <Form.Group>
+                                        <Form.Label>Module Description (हिंदी)</Form.Label>
+                                        <Form.Control
+                                          as="textarea"
+                                          rows={3}
+                                          placeholder="हिंदी में मॉड्यूल विवरण दर्ज करें"
+                                          value={module.description_hi}
+                                          onChange={(e) => handleModuleChange(index, 'description_hi', e.target.value)}
+                                          disabled={!isEditing}
+                                        />
+                                      </Form.Group>
+                                    </Col>
+                                  </Row>
                                 </Card.Body>
                               </Card>
                             ))}

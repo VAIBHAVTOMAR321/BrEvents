@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Carousel from 'react-bootstrap/Carousel';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import Showcase from "../../assets/images/education/showcase-6.webp";
 import Slide2Image from "../../assets/images/education/activities-1.webp"; 
 import Slide3Image from "../../assets/images/education/events-1.webp";
@@ -34,6 +35,7 @@ const animationClasses = [
 
 function EventCarousel() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [index, setIndex] = useState(0);
   const [carouselData, setCarouselData] = useState([]);
   const [eventsData, setEventsData] = useState([]);
@@ -41,16 +43,26 @@ function EventCarousel() {
   const [error, setError] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
 
+  // Get field names based on language
+  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
+  const getSubtitleField = () => language === 'hi' ? 'sub_title_hi' : 'sub_title';
+  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
+
   // Fetch carousel data from API
   useEffect(() => {
     const fetchCarouselData = async () => {
       try {
-        const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/carousel1-item/');
+        const langParam = language === 'hi' ? 'hi' : 'en';
+        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/carousel1-item/?lang=${langParam}`;
+        
+        console.log(`Fetching carousel data from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('Carousel API Response:', data); // Debug log
+        console.log(`Carousel API Response (${langParam}):`, data);
         
-        if (data.success) {
+        if (data.success && Array.isArray(data.data)) {
           // Map API data to component structure
           const mappedData = data.data.map((item, index) => {
             // Handle image URL construction
@@ -67,25 +79,29 @@ function EventCarousel() {
                 // Include the backend path in the URL
                 imageUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/${imagePath}`;
               }
-              console.log(`Image ${index}:`, imageUrl); // Debug log
+              console.log(`Image ${index}:`, imageUrl);
             } else {
               console.log(`No image provided for slide ${index}, using default`);
               // Use default image
               imageUrl = defaultImages[index % defaultImages.length];
             }
             
+            const titleField = getTitleField();
+            const subtitleField = getSubtitleField();
+            
             return {
-              id: slideId, // Ensure we always have an ID
-              title: item.title,
-              subtitle: item.sub_title || "Default subtitle text for this carousel item.",
+              id: slideId,
+              title: item[titleField] || item.title || "Event Title",
+              subtitle: item[subtitleField] || item.sub_title || "Default subtitle text for this carousel item.",
               image: imageUrl,
-              description: item.description || "",
-              stats: defaultStats, // We'll update this with event data
-              event: null // We'll update this with event data
+              description: item[getDescriptionField()] || item.description || "",
+              stats: defaultStats,
+              event: null
             };
           });
           
           setCarouselData(mappedData);
+          setError(null);
         } else {
           throw new Error('Failed to fetch carousel data');
         }
@@ -97,10 +113,10 @@ function EventCarousel() {
         setCarouselData([
           {
             id: 'fallback-1',
-            title: "Inspiring Excellence Through Education",
-            subtitle: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eget lacus id tortor facilisis tincidunt.",
+            title: language === 'hi' ? "शिक्षा के माध्यम से उत्कृष्टता को प्रेरित करना" : "Inspiring Excellence Through Education",
+            subtitle: language === 'hi' ? "डिफ़ॉल्ट उपशीर्षक पाठ इस कैरोसेल आइटम के लिए।" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eget lacus id tortor facilisis tincidunt.",
             image: Showcase,
-            description: "Default description for fallback carousel item.",
+            description: language === 'hi' ? "फॉलबैक कैरोसेल आइटम के लिए डिफ़ॉल्ट विवरण।" : "Default description for fallback carousel item.",
             stats: defaultStats,
             event: null
           }
@@ -114,7 +130,7 @@ function EventCarousel() {
         const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/');
         const data = await response.json();
         
-        console.log('Events API Response:', data); // Debug log
+        console.log('Events API Response:', data);
         
         if (data.success && data.data.length > 0) {
           setEventsData(data.data);
@@ -145,9 +161,9 @@ function EventCarousel() {
             
             // Create new stats with event data
             const eventStats = [
-              { value: nextEvent.event_name, label: "Upcoming Event" },
-              { value: `${formattedDate} at ${formattedTime}`, label: "Date & Time" },
-              { value: nextEvent.venue, label: "Venue" }
+              { value: nextEvent.event_name, label: language === 'hi' ? "आने वाला कार्यक्रम" : "Upcoming Event" },
+              { value: `${formattedDate} at ${formattedTime}`, label: language === 'hi' ? "समय और तारीख" : "Date & Time" },
+              { value: nextEvent.venue, label: language === 'hi' ? "स्थान" : "Venue" }
             ];
             
             // Create new event object with event data
@@ -187,7 +203,7 @@ function EventCarousel() {
     };
 
     fetchData();
-  }, []);
+  }, [language]);
 
   const handleSelect = (selectedIndex) => {
     setIndex(selectedIndex);
@@ -224,14 +240,6 @@ function EventCarousel() {
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="alert alert-warning m-3" role="alert">
-        Error loading carousel: {error}. Using fallback content.
       </div>
     );
   }
