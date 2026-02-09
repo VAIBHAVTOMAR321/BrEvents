@@ -1,22 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../../assets/images/education/campus-5.webp";
 import { Container } from 'react-bootstrap';
+import { useLanguage } from '../../context/LanguageContext';
 import "../../../assets/css/Services.css";
 
 function EntertainmentEvents() {
+  const { language } = useLanguage();
   const [entertainmentData, setEntertainmentData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
+  // Get field names based on language
+  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
+  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
+  const getModuleField = () => language === 'hi' ? 'module_hi' : 'module';
+
   // Fetch entertainment event data from API
   useEffect(() => {
     const fetchEntertainmentData = async () => {
+      setLoading(true);
+      setEntertainmentData(null); // Clear previous data when language changes
       try {
-        const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/entertainment-event-service-item/');
+        const langParam = language === 'hi' ? 'hi' : 'en';
+        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/entertainment-event-service-item/?lang=${langParam}`;
+        
+        console.log(`Fetching entertainment data from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('Entertainment Events API Response:', data); // Debug log
+        console.log(`Entertainment API Response (${langParam}):`, data);
         
         if (data.success && data.data.length > 0) {
           setEntertainmentData(data.data[0]);
@@ -32,7 +46,7 @@ function EntertainmentEvents() {
     };
 
     fetchEntertainmentData();
-  }, []);
+  }, [language]);
 
   // Handle image loading errors
   const handleImageError = () => {
@@ -42,24 +56,38 @@ function EntertainmentEvents() {
 
   // Extract service items from module array
   const getServiceItems = () => {
-    if (!entertainmentData || !entertainmentData.module) return [];
+    if (!entertainmentData) return [];
     
-    return entertainmentData.module.filter(item => {
-      // Filter out items with empty titles and subtitles
-      return item.title || item.subtitle;
-    });
+    const moduleField = getModuleField();
+    const modules = entertainmentData[moduleField];
+    
+    if (!modules || !Array.isArray(modules)) return [];
+    
+    // Handle array format [[title, subtitle], ...] from API
+    return modules.map((item, index) => {
+      if (Array.isArray(item)) {
+        return {
+          id: index,
+          title: item[0] || "",
+          subtitle: item[1] || ""
+        };
+      } else if (typeof item === 'string') {
+        return {
+          id: index,
+          title: item || "",
+          subtitle: ""
+        };
+      }
+      return null;
+    }).filter(item => item && item.title);
   };
 
-  // Extract main description from module array
+  // Extract main description
   const getMainDescription = () => {
-    if (!entertainmentData || !entertainmentData.module) return "";
+    if (!entertainmentData) return "";
     
-    // Find the first module with a subtitle but no title (main description)
-    const mainDesc = entertainmentData.module.find(item => 
-      !item.title && item.subtitle
-    );
-    
-    return mainDesc ? mainDesc.subtitle : "";
+    const descField = getDescriptionField();
+    return entertainmentData[descField] || "";
   };
 
   // Construct image URL - Fixed version
@@ -108,29 +136,36 @@ function EntertainmentEvents() {
             {/* Left Content Column */}
             <div className="col-lg-6">
               <div className="about-content" data-aos="fade-up" data-aos-delay="200">
-                <h2>{entertainmentData ? entertainmentData.title : "Entertainment Events"}</h2>
+                <h2>{entertainmentData ? entertainmentData[getTitleField()] || "Entertainment Events" : "Entertainment Events"}</h2>
                 <p>
-                  {mainDescription || 
-                    "From concept to execution, we deliver high-energy, innovative entertainment experiences that captivate audiences and create lasting impressions."
+                  {mainDescription && mainDescription.length > 0
+                    ? mainDescription
+                    : (language === 'hi' 
+                      ? "अवधारणा से निष्पादन तक, हम उच्च-ऊर्जा, नवीन मनोरंजन अनुभव प्रदान करते हैं जो दर्शकों को मुग्ध करते हैं और स्थायी प्रभाव बनाते हैं।" 
+                      : "From concept to execution, we deliver high-energy, innovative entertainment experiences that captivate audiences and create lasting impressions."
+                    )
                   }
                 </p>
 
                 <div className="services-list">
                      <h5 className="">
-                  {entertainmentData && entertainmentData.description ? 
-                    entertainmentData.description : 
-                    "Our Entertainment Event Services Include:"
+                  {entertainmentData && entertainmentData[getDescriptionField()] && entertainmentData[getDescriptionField()].length > 0
+                    ? entertainmentData[getDescriptionField()]
+                    : (language === 'hi'
+                      ? "हमारी मनोरंजन कार्यक्रम सेवाओं में शामिल हैं:"
+                      : "Our Entertainment Event Services Include:"
+                    )
                   }
                 </h5>
                   {serviceItems.map((item, index) => (
-                    <div className="service-item" key={index}>
+                    <div className="service-item" key={item.id || index}>
                       <div className="service-icon">
                         <i className=""></i>
                       </div>
                      
                       <div className="service-content">
                         {item.title && <h4>{item.title}</h4>}
-                        {item.subtitle && <p>{item.subtitle}</p>}
+                        {item.subtitle && <p className="text-muted">{item.subtitle}</p>}
                       </div>
                     </div>
                   ))}

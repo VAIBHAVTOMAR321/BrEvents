@@ -1,22 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../../assets/images/education/campus-5.webp";
 import { Container } from 'react-bootstrap';
+import { useLanguage } from '../../context/LanguageContext';
 import "../../../assets/css/Services.css";
 
 function Corporateevents() {
+  const { language } = useLanguage();
   const [corporateData, setCorporateData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
+  // Get field names based on language
+  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
+  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
+  const getModuleField = () => language === 'hi' ? 'module_hi' : 'module';
+
   // Fetch corporate event data from API
   useEffect(() => {
     const fetchCorporateData = async () => {
+      setLoading(true);
+      setCorporateData(null); // Clear previous data when language changes
       try {
-        const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/corporate-event-service-item/');
+        const langParam = language === 'hi' ? 'hi' : 'en';
+        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/corporate-event-service-item/?lang=${langParam}`;
+        
+        console.log(`Fetching corporate data from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('Corporate Events API Response:', data); // Debug log
+        console.log(`Corporate API Response (${langParam}):`, data);
         
         if (data.success && data.data.length > 0) {
           setCorporateData(data.data[0]);
@@ -32,7 +46,7 @@ function Corporateevents() {
     };
 
     fetchCorporateData();
-  }, []);
+  }, [language]);
 
   // Handle image loading errors
   const handleImageError = () => {
@@ -42,24 +56,44 @@ function Corporateevents() {
 
   // Extract service items from module array
   const getServiceItems = () => {
-    if (!corporateData || !corporateData.module) return [];
+    if (!corporateData) return [];
     
-    return corporateData.module.filter(item => {
-      // Filter out items with empty titles and subtitles
-      return item.title || item.subtitle;
-    });
+    const moduleField = getModuleField();
+    const modules = corporateData[moduleField];
+    
+    if (!modules || !Array.isArray(modules)) return [];
+    
+    // Handle array format [[title, subtitle], ...] from API
+    return modules.map((item, index) => {
+      if (Array.isArray(item)) {
+        return {
+          id: index,
+          title: item[0] || "",
+          subtitle: item[1] || ""
+        };
+      } else if (typeof item === 'string') {
+        return {
+          id: index,
+          title: item || "",
+          subtitle: ""
+        };
+      } else if (item && typeof item === 'object') {
+        return {
+          id: index,
+          title: item.title || "",
+          subtitle: item.subtitle || ""
+        };
+      }
+      return null;
+    }).filter(item => item && item.title);
   };
 
   // Extract main description from module array
   const getMainDescription = () => {
-    if (!corporateData || !corporateData.module) return "";
+    if (!corporateData) return "";
     
-    // Find the first module with a subtitle but no title (main description)
-    const mainDesc = corporateData.module.find(item => 
-      !item.title && item.subtitle
-    );
-    
-    return mainDesc ? mainDesc.subtitle : "";
+    const descField = getDescriptionField();
+    return corporateData[descField] || "";
   };
 
 // Construct image URL - Fixed version
@@ -106,22 +140,26 @@ const getImageUrl = () => {
             {/* Left Content Column */}
             <div className="col-lg-6">
               <div className="about-content" data-aos="fade-up" data-aos-delay="200">
-                <h2>{corporateData ? corporateData.title : "Professional Corporate Events"}</h2>
+                <h2>{corporateData ? corporateData[getTitleField()] || "Corporate Events" : "Professional Corporate Events"}</h2>
                 <p>
-                  {mainDescription || 
-                    "We specialize in planning, designing, and managing professional corporate events that perfectly align with your brand, goals, and business objectives."
+                  {mainDescription && mainDescription.length > 0
+                    ? mainDescription
+                    : (language === 'hi' 
+                      ? "हम पेशेवर कॉर्पोरेट इवेंट्स की योजना, डिज़ाइन और प्रबंधन में माहिर हैं जो आपके ब्रांड, लक्ष्यों और व्यावसायिक उद्देश्यों के साथ पूरी तरह से संरेखित हों।" 
+                      : "We specialize in planning, designing, and managing professional corporate events that perfectly align with your brand, goals, and business objectives."
+                    )
                   }
                 </p>
 
                 <div className="services-list">
                   {serviceItems.map((item, index) => (
-                    <div className="service-item" key={index}>
+                    <div className="service-item" key={item.id || index}>
                       <div className="service-icon">
                         
                       </div>
                       <div className="service-content">
                         {item.title && <h4>{item.title}</h4>}
-                        {item.subtitle && <p>{item.subtitle}</p>}
+                        {item.subtitle && <p className="text-muted">{item.subtitle}</p>}
                       </div>
                     </div>
                   ))}
@@ -143,9 +181,9 @@ const getImageUrl = () => {
               {/* Additional Content Below Image */}
               <div className="image-caption mt-3" data-aos="fade-up" data-aos-delay="400">
                 <p className="text-muted">
-                  {corporateData && corporateData.description ? 
-                    corporateData.description : 
-                    "."
+                  {corporateData && corporateData[getDescriptionField()] && corporateData[getDescriptionField()].length > 0
+                    ? corporateData[getDescriptionField()] 
+                    : ""
                   }
                 </p>
               </div>
