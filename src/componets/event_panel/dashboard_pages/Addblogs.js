@@ -119,7 +119,7 @@ const Addblogs = () => {
         
         // Optionally redirect after a delay
         setTimeout(() => {
-          navigate("/ManagePosts"); // Changed to posts list page
+          navigate("/Manageblogs"); // Redirect to manage blogs page
         }, 2000);
       } else {
         setError(data.message || "Failed to add post");
