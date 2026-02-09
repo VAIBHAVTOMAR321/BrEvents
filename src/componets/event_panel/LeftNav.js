@@ -90,6 +90,23 @@ const menuItems = [
         },
       ],
     },
+
+     {
+      icon: <FaCalendarAlt />,
+      label: "Blogs",
+      submenu: [
+        {
+          label: "Add blogs",
+          path: "/Addblogs",
+          icon: <FaPlusSquare />,
+        },
+        {
+          label: "Manage blogs",
+          path: "/Manageblogs",
+          icon: <FaListUl />,
+        },
+      ],
+    },
     {
       icon: <FaImages />,
       label: "Carousel",

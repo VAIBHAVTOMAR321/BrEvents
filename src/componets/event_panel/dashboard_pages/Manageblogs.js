@@ -7,7 +7,7 @@ import DashBoardHeader from "../DashBoardHeader";
 import { useAuthFetch } from "../../context/AuthFetch";
 import { useAuth } from "../../context/AuthContext";
 
-const ManageGallery = () => {
+const Manageblogs = () => {
   const { auth, logout, refreshAccessToken, isLoading: authLoading, isAuthenticated } = useAuth();
   const authFetch = useAuthFetch();
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ const ManageGallery = () => {
     setIsLoading(true);
     try {
       const response = await authFetch(
-        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/"
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/"
       );
 
       if (!response.ok) {
@@ -126,7 +126,7 @@ const ManageGallery = () => {
     try {
       console.log("Fetching post with ID:", postId);
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/?id=${postId}`
+        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${postId}/`
       );
 
       if (!response.ok) {
@@ -136,23 +136,12 @@ const ManageGallery = () => {
       const result = await response.json();
       console.log("GET Post Details API Response:", result);
 
-      if (result.status) {
-        let itemData;
+      if (result.status && result.data) {
+        let itemData = result.data;
         
-        // Check if data is an array or a single object
-        if (Array.isArray(result.data)) {
-          itemData = result.data.find(item => item.id.toString() === postId.toString());
-          if (!itemData) {
-            throw new Error(`Post with ID ${postId} not found in response array`);
-          }
-        } else if (result.data && result.data.id) {
-          if (result.data.id.toString() === postId.toString()) {
-            itemData = result.data;
-          } else {
-            throw new Error(`Returned item ID ${result.data.id} does not match requested ID ${postId}`);
-          }
-        } else {
-          throw new Error("Invalid post data structure in response");
+        // Check if the returned item ID matches the requested ID
+        if (itemData.id.toString() !== postId.toString()) {
+          throw new Error(`Returned item ID ${itemData.id} does not match requested ID ${postId}`);
         }
 
         // Process thumbnail URL
@@ -189,6 +178,7 @@ const ManageGallery = () => {
   const handleItemClick = (postId) => {
     console.log("Post card clicked with ID:", postId);
     fetchPostData(postId);
+    setIsEditing(true); // Set to editing mode immediately when clicking edit
   };
 
   // Handle form input changes
@@ -283,9 +273,8 @@ const ManageGallery = () => {
       
       if (formData.id) {
         // Update existing post
-        formDataToSend.append("id", formData.id);
         response = await authFetch(
-          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/`,
+          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${formData.id}/`,
           {
             method: "PUT",
             body: formDataToSend,
@@ -295,7 +284,7 @@ const ManageGallery = () => {
       } else {
         // Create new post
         response = await authFetch(
-          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/",
+          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
           {
             method: "POST",
             body: formDataToSend,
@@ -371,10 +360,9 @@ const ManageGallery = () => {
       formDataToSend.append("id", itemToDelete.id);
       
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/`,
+        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${itemToDelete.id}/`,
         {
           method: "DELETE",
-          body: formDataToSend,
         }
       );
 
@@ -736,26 +724,25 @@ const ManageGallery = () => {
                       </Card.Body>
                     </Card>
 
-                    <div className="d-flex gap-2 mt-3">
-                      {isEditing ? (
-                        <>
-                          <Button
-                            variant="primary"
-                            type="submit"
-                            disabled={isSubmitting}
-                            onClick={handleSubmit}
-                          >
-                            {isSubmitting ? "Saving..." : "Save Changes"}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={resetForm}
-                            type="button"
-                          >
-                            Cancel
-                          </Button>
-                        </>
-                      ) : (
+                      <div className="d-flex gap-2 mt-3">
+                        {isEditing ? (
+                          <>
+                            <Button
+                              variant="primary"
+                              type="submit"
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? "Saving..." : "Save Changes"}
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              onClick={resetForm}
+                              type="button"
+                            >
+                              Cancel
+                            </Button>
+                          </>
+) : (
                         <>
                           <Button
                             variant="primary"
@@ -807,4 +794,4 @@ const ManageGallery = () => {
   );
 };
 
-export default ManageGallery;
+export default Manageblogs;

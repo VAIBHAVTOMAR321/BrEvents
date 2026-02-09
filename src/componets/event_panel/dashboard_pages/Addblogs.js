@@ -3,11 +3,11 @@ import { Container, Form, Button, Alert, Row, Col, Card } from "react-bootstrap"
 import { useNavigate } from "react-router-dom";
 import DashBoardHeader from "../DashBoardHeader";
 import LeftNav from "../LeftNav";
-import { useAuthFetch } from "../../context/AuthFetch";
 
-const AddPost = () => {
+
+const Addblogs = () => {
   const navigate = useNavigate();
-  const authFetch = useAuthFetch();
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -59,7 +59,7 @@ const AddPost = () => {
     setSuccess("");
     
     try {
-      const response = await authFetch(
+      const response = await fetch(
         "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
         {
           method: "POST",
@@ -252,4 +252,4 @@ const AddPost = () => {
   );
 };
 
-export default AddPost;
+export default Addblogs;

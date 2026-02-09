@@ -57,6 +57,8 @@ import ManageGallery from "./componets/event_panel/dashboard_pages/ManageGallery
 import Gallery from "./componets/pages/Gallery";
 import ProtectedRoute from "./componets/protected/ProtectedRoute";
 import Registration from "./componets/pages/Registration";
+import Addblogs from "./componets/event_panel/dashboard_pages/Addblogs";
+import Manageblogs from "./componets/event_panel/dashboard_pages/Manageblogs";
 
 
 function App() {
@@ -89,7 +91,9 @@ function App() {
     "/ManageSeminarsConferences",
     "/AddSeminarsConferences",
     "/AddGallery",
-    "/ManageGallery"
+    "/ManageGallery",
+    "/Addblogs",
+    "/Manageblogs"
   ]);
 
   const shouldHideNavbar = hiddenPaths.has(location.pathname);
@@ -249,6 +253,16 @@ function App() {
              <Route path="/AddGallery" element={
               <ProtectedRoute>
                 <AddGallery />
+              </ProtectedRoute>
+            } />
+             <Route path="/Addblogs" element={
+              <ProtectedRoute>
+                <Addblogs />
+              </ProtectedRoute>
+            } />
+             <Route path="/Manageblogs" element={
+              <ProtectedRoute>
+                <Manageblogs />
               </ProtectedRoute>
             } />
           </Routes>
