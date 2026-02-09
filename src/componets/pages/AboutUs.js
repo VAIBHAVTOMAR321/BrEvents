@@ -1,12 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../assets/images/education/campus-5.webp";
+import "../../assets/css/imageTransitions.css";
+
+// Array of smooth animation classes that pan/move within container bounds
+const animationClasses = [
+  'carousel-item-animation-pan-right',
+  'carousel-item-animation-pan-left',
+  'carousel-item-animation-pan-up',
+  'carousel-item-animation-pan-down',
+  'carousel-item-animation-pan-diagonal-tl',
+  'carousel-item-animation-pan-diagonal-br',
+  'carousel-item-animation-breathing'
+];
 
 function AboutUs() {
   const [aboutData, setAboutData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [animationIndex, setAnimationIndex] = useState(0);
   const id = 3;
+  
+  // Cycle through animations every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationIndex(prev => (prev + 1) % animationClasses.length);
+    }, 8000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // Fetch about us data from API
   useEffect(() => {
@@ -37,6 +59,11 @@ function AboutUs() {
   const handleImageError = () => {
     console.error('Failed to load about us image, using fallback');
     setImageError(true);
+  };
+
+  // Get current animation class
+  const getAnimationClass = () => {
+    return animationClasses[animationIndex];
   };
 
   // Extract timeline items from module array
@@ -176,7 +203,7 @@ function AboutUs() {
               <div className="about-image" data-aos="zoom-in" data-aos-delay="300">
                 <img 
                   src={imageError ? EducationImage : imageUrl} 
-                  className="img-fluid" 
+                  className={`img-fluid ${getAnimationClass()}`}
                   alt="About Us Image"
                   onError={handleImageError}
                 />

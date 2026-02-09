@@ -1633,14 +1633,12 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                     <Form onSubmit={handlePreviewClick}>
                       {apiError && <Alert variant="danger">{apiError}</Alert>}
                       
-                      {/* User Type and Profile Image Section */}
-                      <Row className="mb-4">
-                        {/* Left Column - User Type and Team Name */}
-                        <Col md={6}>
-                          {/* User Type Selection */}
-                          <Form.Group className="mb-4">
+                      {/* User Type, Team Name, and Profile Image Section */}
+                      <Row className="mb-2 g-2">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Registration Type <span className="star">*</span> </Form.Label>
-                            <div className="d-flex">
+                            <div className="d-flex gap-2">
                               <Form.Check
                                 type="radio"
                                 id="individual-type"
@@ -1649,7 +1647,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 value="individual"
                                 checked={formData.user_type === 'individual'}
                                 onChange={() => handleUserTypeChange('individual')}
-                                className="me-4 user-type-option"
+                                className="user-type-option"
                               />
                               <Form.Check
                                 type="radio"
@@ -1668,10 +1666,11 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               </div>
                             )}
                           </Form.Group>
-                          
-                          {/* Team Name (only for team) */}
+                        </Col>
+                        
+                        <Col lg={4} md={6} sm={12}>
                           {formData.user_type === 'team' && (
-                            <Form.Group className="mb-3">
+                            <Form.Group className="mb-2">
                               <Form.Label className="form-label-custom">Team Name <span className="star">*</span></Form.Label>
                               <Form.Control
                                 type="text"
@@ -1679,7 +1678,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 value={formData.team_name}
                                 onChange={handleChange}
                                 isInvalid={!!errors.team_name}
-                                placeholder="Enter your organization/team name"
+                                placeholder="Enter organization/team name"
                                 className="form-control-custom"
                               />
                               <Form.Control.Feedback type="invalid" className='val-error'>
@@ -1689,23 +1688,23 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           )}
                         </Col>
                         
-                        {/* Right Column - Profile Image Upload */}
-                        <Col md={6}>
-                          <Form.Group className="profile-image-upload">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="profile-image-upload mb-2">
                             <Form.Label className="form-label-custom">Profile Image</Form.Label>
-                            <div className="d-flex flex-column align-items-center">
+                            <div className="d-flex align-items-center gap-2">
                               {formData.profile_image_preview ? (
                                 <div className="position-relative">
                                   <Image
                                     src={formData.profile_image_preview}
                                     alt="Profile Preview"
                                     roundedCircle
-                                    style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                    style={{ width: '70px', height: '70px', objectFit: 'cover' }}
                                   />
                                   <Button
                                     variant="danger"
                                     size="sm"
-                                    className="position-absolute top-0 end-0"
+                                    className="position-absolute top-0 end-0 d-flex align-items-center justify-content-center"
+                                    style={{ width: '20px', height: '20px', padding: '0', lineHeight: '1' }}
                                     onClick={removeProfileImage}
                                   >
                                     ×
@@ -1713,12 +1712,12 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 </div>
                               ) : (
                                 <div
-                                  className="upload-icon-container d-flex align-items-center justify-content-center"
+                                  className="upload-icon-container d-flex align-items-center justify-content-center flex-shrink-0"
                                   onClick={() => fileInputRef.current.click()}
                                   style={{
                                     cursor: 'pointer',
-                                    width: '150px',
-                                    height: '150px',
+                                    width: '70px',
+                                    height: '70px',
                                     border: '2px dashed #ccc',
                                     borderRadius: '50%',
                                     transition: 'all 0.3s ease'
@@ -1726,33 +1725,35 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                   onMouseOver={(e) => e.currentTarget.style.borderColor = '#0d6efd'}
                                   onMouseOut={(e) => e.currentTarget.style.borderColor = '#ccc'}
                                 >
-                                  <i className="bi bi-cloud-arrow-up" style={{ fontSize: '3rem', color: '#0d6efd' }}></i>
+                                  <i className="bi bi-cloud-arrow-up" style={{ fontSize: '1.5rem', color: '#0d6efd' }}></i>
                                 </div>
                               )}
-                              <Form.Control
-                                type="file"
-                                ref={fileInputRef}
-                                name="profile_image"
-                                onChange={handleProfileImageChange}
-                                isInvalid={!!errors.profile_image}
-                                accept="image/*"
-                                className="profile-image-input d-none"
-                              />
-                              <Form.Text className="text-muted mt-2">
-                                {formData.profile_image_preview ? 'Click the image to change' : 'Click the icon to upload a profile picture (JPEG, JPG, PNG, or GIF, max 1MB)'}
-                              </Form.Text>
-                              <Form.Control.Feedback type="invalid" className="val-error mt-2">
-                                {errors.profile_image}
-                              </Form.Control.Feedback>
+                              <div className="flex-grow-1">
+                                <Form.Text className="text-muted" style={{ fontSize: '0.75rem', display: 'block' }}>
+                                  {formData.profile_image_preview ? 'Click to change' : 'Click to upload (JPEG, JPG, PNG, GIF, max 1MB)'}
+                                </Form.Text>
+                                <Form.Control
+                                  type="file"
+                                  ref={fileInputRef}
+                                  name="profile_image"
+                                  onChange={handleProfileImageChange}
+                                  isInvalid={!!errors.profile_image}
+                                  accept="image/*"
+                                  className="profile-image-input d-none"
+                                />
+                                <Form.Control.Feedback type="invalid" className="val-error mt-1" style={{ display: errors.profile_image ? 'block' : 'none' }}>
+                                  {errors.profile_image}
+                                </Form.Control.Feedback>
+                              </div>
                             </div>
                           </Form.Group>
                         </Col>
                       </Row>
                       
-                      {/* Full Name and Gender */}
-                      <Row>
-                        <Col md={6}>
-                          <Form.Group className="mb-3">
+                      {/* Full Name, Gender, Email */}
+                      <Row className="mb-2 g-2">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Full Name <span className="star">*</span></Form.Label>
                             <Form.Control
                               type="text"
@@ -1760,7 +1761,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               value={formData.full_name}
                               onChange={handleChange}
                               isInvalid={!!errors.full_name}
-                              placeholder="Enter your full name"
+                              placeholder="Enter full name"
                               className="form-control-custom"
                             />
                             <Form.Control.Feedback type="invalid" className='val-error'>
@@ -1768,10 +1769,10 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                        <Col md={4}>
-                          <Form.Group className="mb-3">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Gender <span className="star">*</span></Form.Label>
-                            <div className="d-flex">
+                            <div className="d-flex gap-2 flex-wrap">
                               <Form.Check
                                 type="radio"
                                 id="gender-male"
@@ -1780,7 +1781,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 value="Male"
                                 checked={formData.gender === 'Male'}
                                 onChange={handleChange}
-                                className="me-3 gender-option"
+                                className="gender-option"
                               />
                               <Form.Check
                                 type="radio"
@@ -1790,7 +1791,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 value="Female"
                                 checked={formData.gender === 'Female'}
                                 onChange={handleChange}
-                                className="me-3 gender-option"
+                                className="gender-option"
                               />
                               <Form.Check
                                 type="radio"
@@ -1811,21 +1812,21 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           </Form.Group>
                         </Col>
                     
-<Col lg={6}>
-                      <Form.Group className="mb-3">
+<Col lg={4} md={6} sm={12}>
+                      <Form.Group className="mb-2">
                         <Form.Label className="form-label-custom">Email Address<span className="star">*</span></Form.Label>
-                        <div className="d-flex align-items-center">
+                        <div className="d-flex align-items-center gap-2">
                           <Form.Control
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
                             isInvalid={!!errors.email}
-                            placeholder="Enter your email"
+                            placeholder="Enter email"
                             className="form-control-custom"
                           />
                           {checkingEmail && (
-                            <div className="ms-2">
+                            <div className="flex-shrink-0">
                               <div className="spinner-border spinner-border-sm text-primary" role="status">
                                 <span className="visually-hidden">Checking...</span>
                               </div>
@@ -1836,46 +1837,32 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           {errors.email}
                         </Form.Control.Feedback>
                         
-                        {/* Display verification link for already registered but unverified email */}
                         {emailNotVerified && (
-                          <Alert variant="warning" className="mt-2">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div>
-                                This email is already registered but not verified.
-                              </div>
+                          <Alert variant="warning" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85rem' }}>
+                            <div className="d-flex justify-content-between align-items-center gap-2">
+                              <span>Email not verified</span>
                               <Button
                                 variant="outline-primary"
                                 size="sm"
                                 onClick={handleDirectVerification}
+                                style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
                               >
-                                Verify Email
+                                Verify
                               </Button>
                             </div>
                           </Alert>
                         )}
                         
-                        {/* Display already registered message below the email field */}
                         {alreadyRegisteredMessage && (
-                          <Alert variant={alreadyRegisteredMessage.includes('not verified') ? 'warning' : 'info'} className="mt-2">
+                          <Alert variant={alreadyRegisteredMessage.includes('not verified') ? 'warning' : 'info'} className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85rem' }}>
                             {alreadyRegisteredMessage}
-                            {alreadyRegisteredMessage.includes('not verified') && (
-                              <div className="mt-2">
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => setCurrentStep('verification')}
-                                >
-                                  Verify Email Now
-                                </Button>
-                              </div>
-                            )}
                           </Alert>
                         )}
                       </Form.Group>
 </Col>
                   
-                     <Col lg={6} md={6} sm={12}>
-                          <Form.Group className="mb-3">
+                     <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Password <span className="star">*</span></Form.Label>
                             <Form.Control
                               type="password"
@@ -1883,7 +1870,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               value={formData.password}
                               onChange={handleChange}
                               isInvalid={!!errors.password}
-                              placeholder="Enter your password"
+                              placeholder="Enter password"
                               className="form-control-custom"
                             />
                             <Form.Control.Feedback type="invalid" className='val-error'>
@@ -1891,8 +1878,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                       <Col lg={6} md={6} sm={12}>
-                          <Form.Group className="mb-3">
+                       <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Confirm Password<span className="star">*</span></Form.Label>
                             <Form.Control
                               type="password"
@@ -1900,7 +1887,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               value={formData.confirmPassword}
                               onChange={handleChange}
                               isInvalid={!!errors.confirmPassword}
-                              placeholder="Confirm your password"
+                              placeholder="Confirm password"
                               className="form-control-custom"
                             />
                             <Form.Control.Feedback type="invalid" className='val-error'>
@@ -1908,17 +1895,17 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                    <Col lg={6} md={6} sm={12}>
+                    <Col lg={4} md={6} sm={12}>
 
-                      <Form.Group className="mb-3">
+                      <Form.Group className="mb-2">
                         <Form.Label className="form-label-custom">Talent Scope <span className="star">*</span></Form.Label>
                         <Dropdown autoClose="outside">
-                          <Dropdown.Toggle variant="" id="talent-scope-dropdown" className="dropdown-custom">
-                            Select Your Talents
+                          <Dropdown.Toggle variant="" id="talent-scope-dropdown" className="dropdown-custom" style={{ width: '100%', textAlign: 'left' }}>
+                            Select Talents
                           </Dropdown.Toggle>
-                          <Dropdown.Menu>
+                          <Dropdown.Menu style={{ maxHeight: '200px', overflowY: 'auto' }}>
                             {talentOptions.map((talent, index) => (
-                              <Dropdown.Item key={index} as="div">
+                              <Dropdown.Item key={index} as="div" className="py-1">
                                 <Form.Check
                                   type="checkbox"
                                   id={`talent-${index}`}
@@ -1931,8 +1918,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           </Dropdown.Menu>
                         </Dropdown>
                         {formData.talent_scope.length > 0 && (
-                          <div className="mt-2">
-                            <small className="text-muted">Selected: {formData.talent_scope.join(', ')}</small>
+                          <div className="mt-1">
+                            <small className="text-muted" style={{ fontSize: '0.75rem' }}>Selected: {formData.talent_scope.join(', ')}</small>
                           </div>
                         )}
                         {errors.talent_scope && (
@@ -1942,11 +1929,14 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                         )}
                       </Form.Group>
 </Col>
+                      </Row>
                   
+                      {/* Date of Birth, Phone, and Address */}
+                      <Row className="mb-2 g-2">
                         {/* Date of Birth (only for individual) */}
                         {formData.user_type === 'individual' && (
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
+                          <Col lg={4} md={6} sm={12}>
+                            <Form.Group className="mb-2">
                               <Form.Label className="form-label-custom">Date of Birth <span className="star">*</span></Form.Label>
                               <Form.Control
                                 type="date"
@@ -1954,7 +1944,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 value={formData.date_of_birth}
                                 onChange={handleChange}
                                 isInvalid={!!errors.date_of_birth}
-                                max={today} // Prevent future dates
+                                max={today}
                                 className="form-control-custom"
                               />
                               <Form.Control.Feedback type="invalid" className='val-error'>
@@ -1963,8 +1953,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Group>
                           </Col>
                         )}
-                        <Col md={formData.user_type === 'individual' ? 6 : 12}>
-                          <Form.Group className="mb-3">
+                        <Col lg={formData.user_type === 'individual' ? 4 : 6} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Phone Number<span className="star">*</span></Form.Label>
                             <Form.Control
                               type="text"
@@ -1972,142 +1962,45 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               value={formData.phone}
                               onChange={handleChange}
                               isInvalid={!!errors.phone}
-                              placeholder="Enter 10-digit phone number"
+                              placeholder="10-digit number"
                               maxLength={10}
                               className="form-control-custom"
                             />
                             <Form.Control.Feedback type="invalid" className='val-error'>
                               {errors.phone}
                             </Form.Control.Feedback>
-                            {/* Display phone number already in use message below the phone field */}
                             {phoneAlreadyRegisteredMessage && (
-                              <Alert variant="info" className="mt-2">
+                              <Alert variant="info" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85rem' }}>
                                 {phoneAlreadyRegisteredMessage}
                               </Alert>
                             )}
                           </Form.Group>
                         </Col>
-                     
- <Col lg={6} md={6} sm={12}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Social Media Links </Form.Label>
-                        {formData.social_media_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
+                        <Col lg={formData.user_type === 'individual' ? 4 : 6} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom">Address <span className="star">*</span></Form.Label>
                             <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handleSocialMediaLinkChange(index, e.target.value)}
-                              placeholder=" https://www.instagram.com/"
+                              as="textarea"
+                              rows={2}
+                              name="address"
+                              value={formData.address}
+                              onChange={handleChange}
+                              isInvalid={!!errors.address}
+                              placeholder="Full address"
                               className="form-control-custom"
+                              style={{ fontSize: '0.85rem' }}
                             />
-                            {formData.social_media_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removeSocialMediaLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addSocialMediaLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.social_media_links && typeof errors.social_media_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.social_media_links}
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
- <Col lg={6} md={6} sm={12}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Additional Links</Form.Label>
-                        {formData.additional_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
-                            <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handleAdditionalLinkChange(index, e.target.value)}
-                              isInvalid={!!getLinkError('additional_links', index)}
-                              placeholder="https://example.com/additional"
-                              className="form-control-custom"
-                            />
-                            {formData.additional_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removeAdditionalLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addAdditionalLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.additional_links && typeof errors.additional_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.additional_links}
-                          </div>
-                        )}
-                      </Form.Group>
-</Col>
-<Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Portfolio Links</Form.Label>
-                        {formData.portfolio_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
-                            <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handlePortfolioLinkChange(index, e.target.value)}
-                              isInvalid={!!getLinkError('portfolio_links', index)}
-                              placeholder="https://example.com/portfolio"
-                              className="form-control-custom"
-                            />
-                            {formData.portfolio_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removePortfolioLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addPortfolioLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.portfolio_links && typeof errors.portfolio_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.portfolio_links}
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
+                            <Form.Control.Feedback type="invalid" className='val-error'>
+                              {errors.address}
+                            </Form.Control.Feedback>
+                          </Form.Group>
+                        </Col>
+                      </Row>
 
-                     
-                          <Col md={4} lg={6}>
-                          <Form.Group className="mb-3">
+                      {/* Country, State, City */}
+                      <Row className="mb-2 g-2">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">Country <span className="star">*</span></Form.Label>
                             <Form.Control
                               type="text"
@@ -2123,9 +2016,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                                              <Col md={4} lg={6}>
-
-                          <Form.Group className="mb-3">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">State <span className="star">*</span></Form.Label>
                             <Form.Control
                               type="text"
@@ -2141,8 +2033,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                      <Col md={4} lg={6}>
-                          <Form.Group className="mb-3">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
                             <Form.Label className="form-label-custom">City <span className="star">*</span></Form.Label>
                             <Form.Control
                               type="text"
@@ -2158,116 +2050,233 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                   
-<Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Address <span className="star">*</span></Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          isInvalid={!!errors.address}
-                          placeholder="Enter your full address"
-                          className="form-control-custom"
-                        />
-                        <Form.Control.Feedback type="invalid" className='val-error'>
-                          {errors.address}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                      </Col>
-  <Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Introduction <span className="star">*</span></Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          name="introduction"
-                          value={formData.introduction}
-                          onChange={handleChange}
-                          isInvalid={!!errors.introduction}
-                          placeholder={formData.user_type === 'individual' 
-                            ? "Tell us about yourself, your experience, and what you hope to achieve..."
-                            : "Tell us about your organization, its mission, and what you hope to achieve..."
-                          }
-                          className="form-control-custom"
-                        />
-                        <div className="d-flex justify-content-between">
-                          <Form.Control.Feedback type="invalid" className='val-error'>
-                            {errors.introduction}
-                          </Form.Control.Feedback>
-                          <small className={`text-muted ${errors.introduction ? 'mt-4' : ''}`}>
-                            {formData.introduction.length}/500 characters
-                          </small>
-                        </div>
-                      </Form.Group>
-</Col>
-                      {/* Certificate Selection and Upload */}
-                      <Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Certificates</Form.Label>
-                        <Dropdown autoClose="outside">
-                          <Dropdown.Toggle variant="" id="certificate-dropdown" className="dropdown-custom">
-                            Select Certificates to Upload
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            {certificateOptions.map((option, index) => (
-                              <Dropdown.Item key={index} as="div">
-                                <Form.Check
-                                  type="checkbox"
-                                  id={`certificate-${index}`}
-                                  label={option.label}
-                                  checked={formData.selected_certificates.includes(option.id)}
-                                  onChange={() => handleCertificateSelection(option.id)}
+                      </Row>
+                      {/* Social Media, Additional, Portfolio Links */}
+                      <Row className="mb-2 g-2">
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom" style={{ fontSize: '0.9rem' }}>Social Media Links </Form.Label>
+                            {formData.social_media_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-1 gap-1">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) => handleSocialMediaLinkChange(index, e.target.value)}
+                                  placeholder="Social media URL"
+                                  className="form-control-custom"
+                                  style={{ fontSize: '0.85rem' }}
                                 />
-                              </Dropdown.Item>
+                                {formData.social_media_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => removeSocialMediaLink(index)}
+                                    style={{ padding: '0.25rem 0.5rem' }}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
                             ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                        {formData.selected_certificates.length > 0 && (
-                          <div className="mt-2">
-                            <small className="text-muted">Selected: {formData.selected_certificates.map(id => 
-                              certificateOptions.find(option => option.id === id)?.label
-                            ).join(', ')}</small>
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
- </Row>
-                      {/* Certificate File Uploads */}
-                      {formData.selected_certificates.map(certificateId => {
-                        const option = certificateOptions.find(opt => opt.id === certificateId);
-                        return (
-                          <Form.Group key={certificateId} className="mb-3">
-                            <Form.Label className="form-label-custom">{option.label} *</Form.Label>
-                            <div className="d-flex align-items-center">
-                              <Form.Control
-                                type="file"
-                                ref={certificateFileRefs[certificateId]}
-                                onChange={(e) => handleCertificateFileChange(certificateId, e)}
-                                isInvalid={!!errors[certificateId]}
-                                accept="image/*,application/pdf"
-                                className="me-2 form-control-custom"
-                              />
-                              {formData[certificateId] && (
-                                <Button
-                                  variant="outline-danger"
-                                  size="sm"
-                                  onClick={() => removeCertificateFile(certificateId)}
-                                >
-                                  Remove
-                                </Button>
-                              )}
-                            </div>
-                            <Form.Text className="text-muted">
-                              Upload certificate file (JPEG, JPG, PNG, or PDF, max 2MB)
-                            </Form.Text>
-                            <Form.Control.Feedback type="invalid" className='val-error'>
-                              {errors[certificateId]}
-                            </Form.Control.Feedback>
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addSocialMediaLink}
+                              className="mt-1"
+                              style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                            >
+                              + Add Link
+                            </Button>
+                            {errors.social_media_links && typeof errors.social_media_links === 'string' && (
+                              <div className="val-error mt-1 text-danger" style={{ fontSize: '0.75rem' }}>
+                                {errors.social_media_links}
+                              </div>
+                            )}
                           </Form.Group>
-                        );
-                      })}
+                        </Col>
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom" style={{ fontSize: '0.9rem' }}>Additional Links</Form.Label>
+                            {formData.additional_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-1 gap-1">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) => handleAdditionalLinkChange(index, e.target.value)}
+                                  isInvalid={!!getLinkError('additional_links', index)}
+                                  placeholder="Additional URL"
+                                  className="form-control-custom"
+                                  style={{ fontSize: '0.85rem' }}
+                                />
+                                {formData.additional_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => removeAdditionalLink(index)}
+                                    style={{ padding: '0.25rem 0.5rem' }}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addAdditionalLink}
+                              className="mt-1"
+                              style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                            >
+                              + Add Link
+                            </Button>
+                            {errors.additional_links && typeof errors.additional_links === 'string' && (
+                              <div className="val-error mt-1 text-danger" style={{ fontSize: '0.75rem' }}>
+                                {errors.additional_links}
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                        <Col lg={4} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom" style={{ fontSize: '0.9rem' }}>Portfolio Links</Form.Label>
+                            {formData.portfolio_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-1 gap-1">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) => handlePortfolioLinkChange(index, e.target.value)}
+                                  isInvalid={!!getLinkError('portfolio_links', index)}
+                                  placeholder="Portfolio URL"
+                                  className="form-control-custom"
+                                  style={{ fontSize: '0.85rem' }}
+                                />
+                                {formData.portfolio_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => removePortfolioLink(index)}
+                                    style={{ padding: '0.25rem 0.5rem' }}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addPortfolioLink}
+                              className="mt-1"
+                              style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}
+                            >
+                              + Add Link
+                            </Button>
+                            {errors.portfolio_links && typeof errors.portfolio_links === 'string' && (
+                              <div className="val-error mt-1 text-danger" style={{ fontSize: '0.75rem' }}>
+                                {errors.portfolio_links}
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      {/* Introduction and Certificates */}
+                      <Row className="mb-2 g-2">
+                        <Col lg={6} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom">Introduction <span className="star">*</span></Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={3}
+                              name="introduction"
+                              value={formData.introduction}
+                              onChange={handleChange}
+                              isInvalid={!!errors.introduction}
+                              placeholder={formData.user_type === 'individual' 
+                                ? "Tell us about yourself and your experience..."
+                                : "Tell us about your organization..."
+                              }
+                              className="form-control-custom"
+                            />
+                            <div className="d-flex justify-content-between">
+                              <Form.Control.Feedback type="invalid" className='val-error'>
+                                {errors.introduction}
+                              </Form.Control.Feedback>
+                              <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                {formData.introduction.length}/500
+                              </small>
+                            </div>
+                          </Form.Group>
+                        </Col>
+                        <Col lg={6} md={6} sm={12}>
+                          <Form.Group className="mb-2">
+                            <Form.Label className="form-label-custom">Certificates</Form.Label>
+                            <Dropdown autoClose="outside">
+                              <Dropdown.Toggle variant="" id="certificate-dropdown" className="dropdown-custom" style={{ width: '100%', textAlign: 'left' }}>
+                                Select Certificates
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu style={{ maxHeight: '200px', overflowY: 'auto', minWidth: '100%' }}>
+                                {certificateOptions.map((option, index) => (
+                                  <Dropdown.Item key={index} as="div" className="py-1">
+                                    <Form.Check
+                                      type="checkbox"
+                                      id={`certificate-${index}`}
+                                      label={option.label}
+                                      checked={formData.selected_certificates.includes(option.id)}
+                                      onChange={() => handleCertificateSelection(option.id)}
+                                    />
+                                  </Dropdown.Item>
+                                ))}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                            {formData.selected_certificates.length > 0 && (
+                              <div className="mt-1">
+                                <small className="text-muted" style={{ fontSize: '0.75rem' }}>Selected ({formData.selected_certificates.length})</small>
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                      </Row>
+                      {/* Certificate File Uploads */}
+                      {formData.selected_certificates.length > 0 && (
+                        <Row className="mb-2 g-2">
+                          {formData.selected_certificates.map(certificateId => {
+                            const option = certificateOptions.find(opt => opt.id === certificateId);
+                            return (
+                              <Col lg={6} md={6} sm={12} key={certificateId}>
+                                <Form.Group className="mb-2">
+                                  <Form.Label className="form-label-custom">{option.label} *</Form.Label>
+                                  <div className="d-flex align-items-center">
+                                    <Form.Control
+                                      type="file"
+                                      ref={certificateFileRefs[certificateId]}
+                                      onChange={(e) => handleCertificateFileChange(certificateId, e)}
+                                      isInvalid={!!errors[certificateId]}
+                                      accept="image/*,application/pdf"
+                                      className="me-2 form-control-custom"
+                                    />
+                                    {formData[certificateId] && (
+                                      <Button
+                                        variant="outline-danger"
+                                        size="sm"
+                                        onClick={() => removeCertificateFile(certificateId)}
+                                      >
+                                        Remove
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Form.Text className="text-muted">
+                                    Upload certificate file (JPEG, JPG, PNG, or PDF, max 2MB)
+                                  </Form.Text>
+                                  <Form.Control.Feedback type="invalid" className='val-error'>
+                                    {errors[certificateId]}
+                                  </Form.Control.Feedback>
+                                </Form.Group>
+                              </Col>
+                            );
+                          })}
+                        </Row>
+                      )}
 
                       <Form.Group className="mb-3">
                         <Form.Check
@@ -2278,14 +2287,14 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           onChange={handleChange}
                           isInvalid={!!errors.agreeTerms}
                           label={
-                            <span>
+                            <span style={{ fontSize: '0.9rem' }}>
                               I agree with the{' '}
                               <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">
-                                Terms and Conditions
+                                Terms
                               </a>
                               {' '}and{' '}
                               <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">
-                                Privacy Policy
+                                Privacy
                               </a>
                             </span>
                           }
@@ -2296,12 +2305,13 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                         </Form.Control.Feedback>
                       </Form.Group>
                       
-                      <div className="d-flex justify-content-end mt-4">
+                      <div className="d-flex justify-content-end mt-3 gap-2">
                         <Button 
                           variant="primary" 
                           type="submit"
                           disabled={isSubmitting || submitSuccess}
                           className="btn-custom-primary"
+                          style={{ padding: '0.5rem 1.5rem', fontSize: '0.9rem' }}
                         >
                           {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
