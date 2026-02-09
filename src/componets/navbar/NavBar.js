@@ -177,6 +177,7 @@ function NavBar() {
                 
                 <li><Link to="/Events">Events</Link></li>
                 <li><Link to="/Gallery">Gallery</Link></li>
+                <li><Link to="/Blogs">Blogs</Link></li>
                 <li><Link to="/Contact">Contact</Link></li>
               </ul>
               

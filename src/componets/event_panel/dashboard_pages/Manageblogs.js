@@ -46,6 +46,9 @@ const Manageblogs = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState(""); // "" means show all
+
   // Base URL for images
   const BASE_URL = "https://mahadevaaya.com/eventmanagement/eventmanagement_backend";
 
@@ -94,27 +97,38 @@ const Manageblogs = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch posts data");
+        throw new Error(`Failed to fetch posts data. Status: ${response.status}`);
       }
 
       const result = await response.json();
       console.log("GET All Posts API Response:", result);
 
-      if (result.status && result.data && result.data.length > 0) {
-        // Process thumbnail URLs for all items
-        const processedItems = result.data.map(item => ({
-          ...item,
-          thumbnailUrl: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : null
-        }));
-        setPosts(processedItems);
+      if (result.success && result.data) {
+        if (Array.isArray(result.data)) {
+          // Process thumbnail URLs for all items
+          const processedItems = result.data.map(item => ({
+            ...item,
+            thumbnailUrl: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : null
+          }));
+          setPosts(processedItems);
+          console.log(`Successfully loaded ${processedItems.length} posts`);
+        } else {
+          console.warn("Data is not an array:", result.data);
+          setPosts([]);
+        }
       } else {
+        console.warn("Invalid API response structure:", result);
         setPosts([]);
+        setMessage("No posts available or invalid response format");
+        setVariant("info");
+        setShowAlert(true);
       }
     } catch (error) {
       console.error("Error fetching posts data:", error);
       setMessage(error.message || "An error occurred while fetching data");
       setVariant("danger");
       setShowAlert(true);
+      setPosts([]);
     } finally {
       setIsLoading(false);
     }
@@ -126,7 +140,7 @@ const Manageblogs = () => {
     try {
       console.log("Fetching post with ID:", postId);
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${postId}/`
+        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/?id=${postId}`
       );
 
       if (!response.ok) {
@@ -136,7 +150,7 @@ const Manageblogs = () => {
       const result = await response.json();
       console.log("GET Post Details API Response:", result);
 
-      if (result.status && result.data) {
+      if (result.success && result.data) {
         let itemData = result.data;
         
         // Check if the returned item ID matches the requested ID
@@ -255,6 +269,7 @@ const Manageblogs = () => {
 
     try {
       const formDataToSend = new FormData();
+      formDataToSend.append("id", formData.id || "");
       formDataToSend.append("title", formData.title);
       formDataToSend.append("summary", formData.summary);
       formDataToSend.append("description", formData.description);
@@ -274,7 +289,7 @@ const Manageblogs = () => {
       if (formData.id) {
         // Update existing post
         response = await authFetch(
-          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${formData.id}/`,
+          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
           {
             method: "PUT",
             body: formDataToSend,
@@ -306,7 +321,7 @@ const Manageblogs = () => {
       const result = await response.json();
       console.log("Success response:", result);
 
-      if (result.status) {
+      if (result.success) {
         setMessage(successMessage);
         setVariant("success");
         setShowAlert(true);
@@ -355,14 +370,16 @@ const Manageblogs = () => {
      
     setIsSubmitting(true);
     try {
-      // Include the ID in the query parameters for the DELETE request
-      const formDataToSend = new FormData();
-      formDataToSend.append("id", itemToDelete.id);
-      
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/${itemToDelete.id}/`,
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
         {
           method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: itemToDelete.id
+          }),
         }
       );
 
@@ -373,7 +390,7 @@ const Manageblogs = () => {
 
       const result = await response.json();
       
-      if (result.status) {
+      if (result.success) {
         setMessage("Post deleted successfully!");
         setVariant("success");
         setShowAlert(true);
@@ -508,6 +525,32 @@ const Manageblogs = () => {
                 {!selectedItemId ? (
                   // Posts List View
                   <>
+                    {/* Filter Section */}
+                    <div className="mb-4">
+                      <Form.Group>
+                        <Form.Label className="mb-3">Filter by Status:</Form.Label>
+                        <div className="d-flex gap-2 flex-wrap">
+                          <Button
+                            variant={statusFilter === "" ? "primary" : "outline-primary"}
+                            size="sm"
+                            onClick={() => setStatusFilter("")}
+                          >
+                            All Posts
+                          </Button>
+                          {statusOptions.map((option) => (
+                            <Button
+                              key={option.value}
+                              variant={statusFilter === option.value ? "primary" : "outline-primary"}
+                              size="sm"
+                              onClick={() => setStatusFilter(option.value)}
+                            >
+                              {option.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </Form.Group>
+                    </div>
+
                     <Row className="mb-4">
                       <Col>
                         {posts.length === 0 ? (
@@ -516,7 +559,9 @@ const Manageblogs = () => {
                           </Alert>
                         ) : (
                           <Row>
-                            {posts.map((item) => (
+                            {posts
+                              .filter((item) => statusFilter === "" || item.status === statusFilter)
+                              .map((item) => (
                               <Col md={6} lg={4} className="mb-4" key={item.id}>
                                 <Card className="h-100 post-card profile-card">
                                   <Card.Body className="d-flex flex-column">
@@ -587,6 +632,11 @@ const Manageblogs = () => {
                             ))}
                           </Row>
                         )}
+                        {posts.length > 0 && posts.filter((item) => statusFilter === "" || item.status === statusFilter).length === 0 && (
+                          <Alert variant="info">
+                            No posts found with the selected status filter.
+                          </Alert>
+                        )}
                       </Col>
                     </Row>
                   </>
@@ -606,7 +656,7 @@ const Manageblogs = () => {
                       <Card.Body>
                         <Form onSubmit={handleSubmit}>
                           <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
+                            <Form.Label>Title *</Form.Label>
                             <Form.Control
                               type="text"
                               placeholder="Enter post title"
@@ -619,7 +669,7 @@ const Manageblogs = () => {
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Label>Summary</Form.Label>
+                            <Form.Label>Summary *</Form.Label>
                             <Form.Control
                               type="text"
                               placeholder="Enter post summary"
@@ -632,10 +682,10 @@ const Manageblogs = () => {
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
+                            <Form.Label>Description *</Form.Label>
                             <Form.Control
                               as="textarea"
-                              rows={4}
+                              rows={5}
                               placeholder="Enter post description"
                               name="description"
                               value={formData.description}
@@ -646,7 +696,7 @@ const Manageblogs = () => {
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
+                            <Form.Label>Category *</Form.Label>
                             <Form.Select
                               name="category"
                               value={formData.category}
@@ -667,16 +717,22 @@ const Manageblogs = () => {
                             <Form.Label>Video URL</Form.Label>
                             <Form.Control
                               type="url"
-                              placeholder="Enter video URL"
+                              placeholder="Enter video URL (e.g., https://www.youtube.com/...)"
                               name="video_url"
                               value={formData.video_url}
                               onChange={handleChange}
                               disabled={!isEditing}
                             />
+                            {formData.video_url && isEditing && (
+                              <small className="text-muted d-block mt-1">
+                                <FaVideo className="me-1" />
+                                Video URL will be displayed as a link in the post
+                              </small>
+                            )}
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Label>Status</Form.Label>
+                            <Form.Label>Status *</Form.Label>
                             <Form.Select
                               name="status"
                               value={formData.status}
@@ -691,25 +747,27 @@ const Manageblogs = () => {
                             </Form.Select>
                           </Form.Group>
 
-                          <Form.Group className="mb-3">
-                            <Form.Label>Thumbnail</Form.Label>
+                          <Form.Group className="mb-4">
+                            <Form.Label>Thumbnail Image</Form.Label>
                             {formData.thumbnailPreview ? (
                               <div className="mb-3">
-                                <img 
-                                  src={formData.thumbnailPreview} 
-                                  alt="Preview" 
-                                  className="img-fluid rounded"
-                                  style={{ maxHeight: "200px" }}
-                                  onError={(e) => {
-                                    console.error("Thumbnail preview failed to load:", e.target.src);
-                                    e.target.src = "https://picsum.photos/seed/placeholder/300/200.jpg";
-                                  }}
-                                />
+                                <div className="position-relative d-inline-block">
+                                  <img 
+                                    src={formData.thumbnailPreview} 
+                                    alt="Preview" 
+                                    className="img-fluid rounded"
+                                    style={{ maxHeight: "250px", maxWidth: "100%" }}
+                                    onError={(e) => {
+                                      console.error("Thumbnail preview failed to load:", e.target.src);
+                                      e.target.src = "https://picsum.photos/seed/placeholder/300/200.jpg";
+                                    }}
+                                  />
+                                </div>
                               </div>
                             ) : (
-                              <div className="mb-3 text-center bg-light p-4 rounded">
-                                <FaImage size={50} color="#ccc" />
-                                <p className="text-muted mt-2">No Thumbnail</p>
+                              <div className="mb-3 text-center bg-light p-5 rounded">
+                                <FaImage size={60} color="#ccc" className="mb-2" />
+                                <p className="text-muted">No Thumbnail Uploaded</p>
                               </div>
                             )}
                             {isEditing && (
@@ -720,47 +778,47 @@ const Manageblogs = () => {
                               />
                             )}
                           </Form.Group>
+
+                          <div className="d-flex gap-2 mt-4">
+                            {isEditing ? (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  type="submit"
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? "Saving..." : "Save Changes"}
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  onClick={resetForm}
+                                  type="button"
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  onClick={enableEditing}
+                                  type="button"
+                                >
+                                  <FaEdit /> Edit Post Details
+                                </Button>
+                                <Button
+                                  variant="outline-danger"
+                                  onClick={() => showDeleteConfirmation(formData)}
+                                  type="button"
+                                >
+                                  <FaTrash /> Delete Post
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </Form>
                       </Card.Body>
                     </Card>
-
-                      <div className="d-flex gap-2 mt-3">
-                        {isEditing ? (
-                          <>
-                            <Button
-                              variant="primary"
-                              type="submit"
-                              disabled={isSubmitting}
-                            >
-                              {isSubmitting ? "Saving..." : "Save Changes"}
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              onClick={resetForm}
-                              type="button"
-                            >
-                              Cancel
-                            </Button>
-                          </>
-) : (
-                        <>
-                          <Button
-                            variant="primary"
-                            onClick={enableEditing}
-                            type="button"
-                          >
-                            <FaEdit /> Edit Post Details
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            onClick={() => showDeleteConfirmation(formData)}
-                            type="button"
-                          >
-                            <FaTrash /> Delete Post
-                          </Button>
-                        </>
-                      )}
-                    </div>
                   </>
                 )}
               </>

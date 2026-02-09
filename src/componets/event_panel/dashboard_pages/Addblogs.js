@@ -3,10 +3,13 @@ import { Container, Form, Button, Alert, Row, Col, Card } from "react-bootstrap"
 import { useNavigate } from "react-router-dom";
 import DashBoardHeader from "../DashBoardHeader";
 import LeftNav from "../LeftNav";
+import { useAuthFetch } from "../../context/AuthFetch";
+import { FaImage } from "react-icons/fa";
 
 
 const Addblogs = () => {
   const navigate = useNavigate();
+  const authFetch = useAuthFetch();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -19,6 +22,7 @@ const Addblogs = () => {
     description: "",
     category: "",
     video_url: "",
+    thumbnail: null,
     status: "draft"
   });
   
@@ -26,6 +30,7 @@ const Addblogs = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Check device width
   useEffect(() => {
@@ -51,6 +56,24 @@ const Addblogs = () => {
     });
   };
 
+  // Handle thumbnail file change
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({
+        ...formData,
+        thumbnail: file
+      });
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,14 +82,22 @@ const Addblogs = () => {
     setSuccess("");
     
     try {
-      const response = await fetch(
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("summary", formData.summary);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("video_url", formData.video_url);
+      formDataToSend.append("status", formData.status);
+      if (formData.thumbnail) {
+        formDataToSend.append("thumbnail", formData.thumbnail);
+      }
+
+      const response = await authFetch(
         "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          body: formDataToSend,
         }
       );
       
@@ -81,8 +112,10 @@ const Addblogs = () => {
           description: "",
           category: "",
           video_url: "",
+          thumbnail: null,
           status: "draft"
         });
+        setImagePreview(null);
         
         // Optionally redirect after a delay
         setTimeout(() => {
@@ -206,6 +239,30 @@ const Addblogs = () => {
                           name="video_url"
                           value={formData.video_url}
                           onChange={handleChange}
+                        />
+                      </Form.Group>
+                      
+                      <Form.Group className="mb-4" controlId="thumbnail">
+                        <Form.Label>Thumbnail Image</Form.Label>
+                        {imagePreview ? (
+                          <div className="mb-3">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="img-fluid rounded"
+                              style={{ maxHeight: "200px" }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="mb-3 text-center bg-light p-4 rounded">
+                            <FaImage size={50} color="#ccc" />
+                            <p className="text-muted mt-2">No Thumbnail Selected</p>
+                          </div>
+                        )}
+                        <Form.Control
+                          type="file"
+                          accept="image/*"
+                          onChange={handleThumbnailChange}
                         />
                       </Form.Group>
                       
