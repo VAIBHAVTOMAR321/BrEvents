@@ -9,15 +9,14 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { LanguageProvider } from "./componets/context/LanguageContext";
 
 
 import Home from "./componets/pages/Home";
 import Footer from "./componets/footer/Footer";
 import NavBar from "./componets/navbar/NavBar";
 import AboutUs from "./componets/pages/AboutUs"; 
-import Admissions from "./componets/pages/about_us/Admissions";
-import Faculty from "./componets/pages/about_us/Faculty";
+
+
 import RegistrationModal from "./componets/pages/RegistrationModal";
 import DashBoardHeader from "./componets/event_panel/DashBoardHeader";
 import Dashboard from "./componets/event_panel/DashBoard";
@@ -56,11 +55,11 @@ import Seminar from "./componets/pages/services/Seminar";
 import AddGallery from "./componets/event_panel/dashboard_pages/AddGallery";
 import ManageGallery from "./componets/event_panel/dashboard_pages/ManageGallery";
 import Gallery from "./componets/pages/Gallery";
-import Blogs from "./componets/pages/Blogs";
 import ProtectedRoute from "./componets/protected/ProtectedRoute";
 import Registration from "./componets/pages/Registration";
 import Addblogs from "./componets/event_panel/dashboard_pages/Addblogs";
 import Manageblogs from "./componets/event_panel/dashboard_pages/Manageblogs";
+import Blogs from "./componets/pages/Blogs";
 
 
 function App() {
@@ -95,13 +94,14 @@ function App() {
     "/AddGallery",
     "/ManageGallery",
     "/Addblogs",
-    "/Manageblogs"
+    "/Manageblogs",
+ 
   ]);
 
   const shouldHideNavbar = hiddenPaths.has(location.pathname);
   
   return (
-    <LanguageProvider>
+    
       <div className="app-container">
         {!shouldHideNavbar && <NavBar />}
         
@@ -112,8 +112,7 @@ function App() {
             <Route path="/AboutUs" element={<AboutUs />} />
             <Route path="/DashBoardHeader" element={<DashBoardHeader />} />
             <Route path="/Login" element={<Login />} />
-            <Route path="/Admissions" element={<Admissions />} />
-            <Route path="/Faculty" element={<Faculty />} />
+        
              <Route path="/RegistrationModal" element={<RegistrationModal />} />
              <Route path="/Events" element={<Events />} />
              <Route path="/Contact" element={<Contact />} />
@@ -124,8 +123,8 @@ function App() {
              <Route path="/PrivateParties" element={<PrivateParties />} />
              <Route path="/Seminar" element={<Seminar />} />
              <Route path="/Gallery" element={<Gallery />} />
-             <Route path="/Blogs" element={<Blogs />} />
              <Route path="/Registration" element={<Registration />} />
+             <Route path="/Blogs" element={<Blogs />} />
             
             {/* Protected Routes */}
             <Route path="/DashBoard" element={
@@ -268,12 +267,12 @@ function App() {
                 <Manageblogs />
               </ProtectedRoute>
             } />
+            
           </Routes>
         </main>
            {!shouldHideNavbar && <Footer />}
       
       </div>
-    </LanguageProvider>
  
   );
 }

@@ -23,12 +23,10 @@ const ManageParties = () => {
   const [formData, setFormData] = useState({
     id: null,
     title: "",
-    title_hi: "",
     description: "",
-    description_hi: "",
     image: null,
     imagePreview: null,
-    modules: [] // Each module: { title: "", subtitle: "", title_hi: "", subtitle_hi: "" }
+    modules: []
   });
 
   // Submission state
@@ -166,19 +164,19 @@ const ManageParties = () => {
           throw new Error("Invalid corporate event item data structure in response");
         }
 
-        // Process modules to merge English and Hindi arrays into bilingual objects
-        const moduleEng = Array.isArray(itemData.module) ? itemData.module : [];
-        const moduleHi = Array.isArray(itemData.module_hi) ? itemData.module_hi : [];
-        
-        const processedModules = moduleEng.map((engItem, index) => {
-          const hiItem = moduleHi[index];
-          return {
-            title: Array.isArray(engItem) ? engItem[0] || "" : engItem || "",
-            subtitle: Array.isArray(engItem) ? engItem[1] || "" : "",
-            title_hi: Array.isArray(hiItem) ? hiItem[0] || "" : hiItem || "",
-            subtitle_hi: Array.isArray(hiItem) ? hiItem[1] || "" : ""
-          };
-        });
+        // Process modules to ensure they have title and subtitle
+        const processedModules = itemData.module ? 
+          (Array.isArray(itemData.module) ? itemData.module.map(module => {
+            // If module is a string, convert to object with title and subtitle
+            if (typeof module === 'string') {
+              return { title: module, subtitle: "" };
+            }
+            // If module is already an object, ensure it has title and subtitle
+            return {
+              title: module.title || "",
+              subtitle: module.subtitle || ""
+            };
+          }) : []) : [];
 
         // Process image URL
         const imageUrl = getImageUrl(itemData.image);
@@ -186,9 +184,7 @@ const ManageParties = () => {
         setFormData({
           id: itemData.id,
           title: itemData.title,
-          title_hi: itemData.title_hi || "",
           description: itemData.description,
-          description_hi: itemData.description_hi || "",
           image: itemData.image, // Store the original image path
           imagePreview: imageUrl,
           modules: processedModules
@@ -244,7 +240,7 @@ const ManageParties = () => {
   const addModule = () => {
     setFormData((prev) => ({
       ...prev,
-      modules: [...prev.modules, { title: "", subtitle: "", title_hi: "", subtitle_hi: "" }]
+      modules: [...prev.modules, { title: "", subtitle: "" }]
     }));
   };
 
@@ -296,9 +292,7 @@ const ManageParties = () => {
     setFormData({
       id: null,
       title: "",
-      title_hi: "",
       description: "",
-      description_hi: "",
       image: null,
       imagePreview: null,
       modules: []
@@ -316,17 +310,11 @@ const ManageParties = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("title", formData.title.trim());
-      formDataToSend.append("title_hi", formData.title_hi.trim());
-      formDataToSend.append("description", formData.description.trim());
-      formDataToSend.append("description_hi", formData.description_hi.trim());
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
       
-      // Separate modules into English and Hindi arrays of arrays
-      const moduleEng = formData.modules.map(m => [m.title, m.subtitle]);
-      const moduleHi = formData.modules.map(m => [m.title_hi, m.subtitle_hi]);
-      
-      formDataToSend.append("module", JSON.stringify(moduleEng));
-      formDataToSend.append("module_hi", JSON.stringify(moduleHi));
+      // Add modules as JSON string (array of objects with title and subtitle)
+      formDataToSend.append("module", JSON.stringify(formData.modules));
       
       if (formData.image && typeof formData.image === 'object') {
         formDataToSend.append("image", formData.image);
@@ -338,7 +326,7 @@ const ManageParties = () => {
       let successMessage;
       
       if (formData.id) {
-        // Update existing corporate event item (id is mandatory for PUT)
+        // Update existing corporate event item
         formDataToSend.append("id", formData.id);
         response = await authFetch(
           `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/private-parties-event-service/`,
@@ -486,27 +474,16 @@ const ManageParties = () => {
 
   // Render module item for display
   const renderModuleItem = (module, index) => {
-    // Handle array format [title, subtitle]
-    if (Array.isArray(module)) {
-      return (
-        <div key={index} className="mb-2">
-          <strong>{module[0]}</strong>
-          {module[1] && <div className="text-muted small">{module[1]}</div>}
-        </div>
-      );
-    }
-    // Handle object format with title and subtitle
-    else if (module && typeof module === 'object') {
+    // Handle both string and object formats
+    if (typeof module === 'string') {
+      return <div key={index} className="mb-2">{module}</div>;
+    } else if (module && typeof module === 'object') {
       return (
         <div key={index} className="mb-2">
           <strong>{module.title}</strong>
           {module.subtitle && <div className="text-muted small">{module.subtitle}</div>}
         </div>
       );
-    }
-    // Handle string format
-    else if (typeof module === 'string') {
-      return <div key={index} className="mb-2">{module}</div>;
     }
     return null;
   };
@@ -685,69 +662,32 @@ const ManageParties = () => {
                       </Card.Header>
                       <Card.Body>
                         <Form onSubmit={handleSubmit}>
-                          <Row>
-                            <Col md={6}>
-                              <Form.Group className="mb-3">
-                                <Form.Label>Title (English)</Form.Label>
-                                <Form.Control
-                                  type="text"
-                                  placeholder="Enter private parties event item title in English"
-                                  name="title"
-                                  value={formData.title}
-                                  onChange={handleChange}
-                                  required
-                                  disabled={!isEditing}
-                                />
-                              </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                              <Form.Group className="mb-3">
-                                <Form.Label>Title (हिंदी)</Form.Label>
-                                <Form.Control
-                                  type="text"
-                                  placeholder="हिंदी में शीर्षक दर्ज करें"
-                                  name="title_hi"
-                                  value={formData.title_hi}
-                                  onChange={handleChange}
-                                  required
-                                  disabled={!isEditing}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </Row>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Title</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="Enter corporate event item title"
+                              name="title"
+                              value={formData.title}
+                              onChange={handleChange}
+                              required
+                              disabled={!isEditing}
+                            />
+                          </Form.Group>
 
-                          <Row>
-                            <Col md={6}>
-                              <Form.Group className="mb-3">
-                                <Form.Label>Description (English)</Form.Label>
-                                <Form.Control
-                                  as="textarea"
-                                  rows={4}
-                                  placeholder="Enter private parties event item description in English"
-                                  name="description"
-                                  value={formData.description}
-                                  onChange={handleChange}
-                                  required
-                                  disabled={!isEditing}
-                                />
-                              </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                              <Form.Group className="mb-3">
-                                <Form.Label>Description (हिंदी)</Form.Label>
-                                <Form.Control
-                                  as="textarea"
-                                  rows={4}
-                                  placeholder="हिंदी में विवरण दर्ज करें"
-                                  name="description_hi"
-                                  value={formData.description_hi}
-                                  onChange={handleChange}
-                                  required
-                                  disabled={!isEditing}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </Row>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Description</Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={4}
+                              placeholder="Enter corporate event item description"
+                              name="description"
+                              value={formData.description}
+                              onChange={handleChange}
+                              required
+                              disabled={!isEditing}
+                            />
+                          </Form.Group>
 
                           <Form.Group className="mb-3">
                             <Form.Label>Image</Form.Label>
@@ -804,59 +744,26 @@ const ManageParties = () => {
                                   )}
                                 </Card.Header>
                                 <Card.Body>
-                                  <Row>
-                                    <Col md={6}>
-                                      <Form.Group className="mb-3">
-                                        <Form.Label>Module Title (English)</Form.Label>
-                                        <Form.Control
-                                          type="text"
-                                          placeholder="Enter module title in English"
-                                          value={module.title}
-                                          onChange={(e) => handleModuleChange(index, 'title', e.target.value)}
-                                          disabled={!isEditing}
-                                        />
-                                      </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                      <Form.Group className="mb-3">
-                                        <Form.Label>Module Title (हिंदी)</Form.Label>
-                                        <Form.Control
-                                          type="text"
-                                          placeholder="हिंदी में मॉड्यूल शीर्षक दर्ज करें"
-                                          value={module.title_hi}
-                                          onChange={(e) => handleModuleChange(index, 'title_hi', e.target.value)}
-                                          disabled={!isEditing}
-                                        />
-                                      </Form.Group>
-                                    </Col>
-                                  </Row>
-
-                                  <Row>
-                                    <Col md={6}>
-                                      <Form.Group className="mb-3">
-                                        <Form.Label>Module Subtitle (English)</Form.Label>
-                                        <Form.Control
-                                          type="text"
-                                          placeholder="Enter module subtitle in English"
-                                          value={module.subtitle}
-                                          onChange={(e) => handleModuleChange(index, 'subtitle', e.target.value)}
-                                          disabled={!isEditing}
-                                        />
-                                      </Form.Group>
-                                    </Col>
-                                    <Col md={6}>
-                                      <Form.Group className="mb-3">
-                                        <Form.Label>Module Subtitle (हिंदी)</Form.Label>
-                                        <Form.Control
-                                          type="text"
-                                          placeholder="हिंदी में मॉड्यूल उपशीर्षक दर्ज करें"
-                                          value={module.subtitle_hi}
-                                          onChange={(e) => handleModuleChange(index, 'subtitle_hi', e.target.value)}
-                                          disabled={!isEditing}
-                                        />
-                                      </Form.Group>
-                                    </Col>
-                                  </Row>
+                                  <Form.Group className="mb-3">
+                                    <Form.Label>Module Title</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      placeholder="Enter module title"
+                                      value={module.title}
+                                      onChange={(e) => handleModuleChange(index, 'title', e.target.value)}
+                                      disabled={!isEditing}
+                                    />
+                                  </Form.Group>
+                                  <Form.Group>
+                                    <Form.Label>Module Subtitle</Form.Label>
+                                    <Form.Control
+                                      type="text"
+                                      placeholder="Enter module subtitle"
+                                      value={module.subtitle}
+                                      onChange={(e) => handleModuleChange(index, 'subtitle', e.target.value)}
+                                      disabled={!isEditing}
+                                    />
+                                  </Form.Group>
                                 </Card.Body>
                               </Card>
                             ))}

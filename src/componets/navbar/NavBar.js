@@ -5,7 +5,6 @@ import EventLogo from '../../assets/images/br-event-logo.png'
 import { Button, Container } from 'react-bootstrap';
 import { FaPhone } from "react-icons/fa6";
 import { FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, FaLinkedin, FaGlobe, FaEnvelope } from 'react-icons/fa';
-import { useLanguage } from '../context/LanguageContext';
 
 function NavBar() {
   const [companies, setCompanies] = useState([]);
@@ -13,47 +12,6 @@ function NavBar() {
   const [error, setError] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState({});
-  const { language, toggleLanguage } = useLanguage();
-
-  // Bilingual text object
-  const textContent = {
-    en: {
-      loading: "Loading company details...",
-      home: "Home",
-      aboutUs: "About Us",
-      services: "Services",
-      events: "Events",
-      gallery: "Gallery",
-      blogs: "Blogs",
-      contact: "Contact",
-      corporateEvents: "Corporate events",
-      entertainmentEvents: "Entertainment Events",
-      concertEvents: "Concert events",
-      privateParties: "Private Parties",
-      seminar: "Seminar",
-      login: "Login",
-      register: "Register"
-    },
-    hi: {
-      loading: "कंपनी विवरण लोड हो रहा है...",
-      home: "होम",
-      aboutUs: "हमारे बारे में",
-      services: "सेवाएं",
-      events: "इवेंट्स",
-      gallery: "गैलरी",
-      blogs: "ब्लॉग्स",
-      contact: "संपर्क",
-      corporateEvents: "कॉर्पोरेट इवेंट",
-      entertainmentEvents: "मनोरंजन इवेंट्स",
-      concertEvents: "कॉन्सर्ट इवेंट्स",
-      privateParties: "निजी पार्टियां",
-      seminar: "सेमिनार",
-      login: "लॉगिन",
-      register: "रजिस्टर"
-    }
-  };
-
-  const t = textContent[language] || textContent.en;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -111,7 +69,7 @@ function NavBar() {
   };
 
   if (loading) {
-    return <div className="text-center py-4">{t.loading}</div>;
+    return <div className="text-center py-4">Loading company details...</div>;
   }
 
   if (error) {
@@ -154,21 +112,10 @@ function NavBar() {
                   </li>
                 ))}
               </ul>
-              <ul className="list-unstyled mb-0 d-flex align-items-center">
+              <ul className="list-unstyled mb-0">
                 <li>
-                  <Button 
-                    variant={language === 'en' ? 'primary' : 'outline-primary'} 
-                    size="sm"
-                    onClick={toggleLanguage}
-                    className="me-2"
-                    style={{ minWidth: '60px' }}
-                  >
-                    {language === 'en' ? 'हिंदी' : 'English'}
-                  </Button>
-                </li>
-                <li>
-                  <Link to="/Login" className="btn btn-primary login-btn mx-2">{t.login}</Link>
-                  <Link to="/Registration" className="btn btn-primary login-btn mx-2">{t.register}</Link>
+                  <Link to="/Login" className="btn btn-primary login-btn">Login</Link>
+                  <Link to="/Registration" className="btn btn-primary login-btn mx-3">Register</Link>
                 </li>
               </ul>
             </div>
@@ -184,21 +131,10 @@ function NavBar() {
                   </li>
                 ))}
               </ul>
-              <ul className="list-unstyled mb-0 ms-3 d-flex align-items-center">
+              <ul className="list-unstyled mb-0 ms-3">
                 <li>
-                  <Button 
-                    variant={language === 'en' ? 'primary' : 'outline-primary'} 
-                    size="sm"
-                    onClick={toggleLanguage}
-                    className="me-2"
-                    style={{ minWidth: '60px' }}
-                  >
-                    {language === 'en' ? 'हिंदी' : 'English'}
-                  </Button>
-                </li>
-                <li>
-                  <Link to="/Login" className="btn btn-primary login-btn">{t.login}</Link>
-                  <Link to="/Registration" className="btn btn-primary login-btn mx-3">{t.register}</Link>
+                  <Link to="/Login" className="btn btn-primary login-btn">Login</Link>
+                  <Link to="/Registration" className="btn btn-primary login-btn mx-3">Register</Link>
                 </li>
               </ul>
             </div>
@@ -223,26 +159,26 @@ function NavBar() {
 
             <nav id="navmenu" className={`navmenu ${isMenuOpen ? 'navmenu-active' : ''}`}>
               <ul>
-                <li><Link to="/" className="active">{t.home}</Link></li>
-                <li><Link to="/AboutUs" className="active">{t.aboutUs}</Link></li>
+                <li><Link to="/" className="active">Home</Link></li>
+                <li><Link to="/AboutUs" className="active">About Us</Link></li>
 
                 <li className={`dropdown ${openDropdowns['services'] ? 'dropdown-active' : ''}`}>
                   <Link to="#services" onClick={(e) => { e.preventDefault(); toggleDropdown('services'); }}>
-                    <span>{t.services}</span> <i className={`bi bi-chevron-down toggle-dropdown ${openDropdowns['services'] ? 'rotate-icon' : ''}`}></i>
+                    <span>Services</span> <i className={`bi bi-chevron-down toggle-dropdown ${openDropdowns['services'] ? 'rotate-icon' : ''}`}></i>
                   </Link>
                   <ul>
-                    <li><Link to="/CorporateEvents">{t.corporateEvents}</Link></li>
-                    <li><Link to="/EntertainmentEvents">{t.entertainmentEvents}</Link></li>
-                    <li><Link to="/ConcertEvent">{t.concertEvents}</Link></li>
-                    <li><Link to="/PrivateParties">{t.privateParties}</Link></li>
-                    <li><Link to="/Seminar">{t.seminar}</Link></li>
+                    <li><Link to="/CorporateEvents">Corporate events</Link></li>
+                    <li><Link to="/EntertainmentEvents">Entertainment Events</Link></li>
+                    <li><Link to="/ConcertEvent">Concert events</Link></li>
+                    <li><Link to="/PrivateParties">Private Parties</Link></li>
+                    <li><Link to="/Seminar">Seminar</Link></li>
                   </ul>
                 </li>
                 
-                <li><Link to="/Events">{t.events}</Link></li>
-                <li><Link to="/Gallery">{t.gallery}</Link></li>
-                <li><Link to="/Blogs">{t.blogs}</Link></li>
-                <li><Link to="/Contact">{t.contact}</Link></li>
+                <li><Link to="/Events">Events</Link></li>
+                <li><Link to="/Gallery">Gallery</Link></li>
+                <li><Link to="/Blogs">Blogs</Link></li>
+                <li><Link to="/Contact">Contact</Link></li>
               </ul>
               
               <i

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Alert, Card, Modal, Spinner, Badge } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaArrowLeft, FaTrash, FaPlus, FaImage, FaVideo } from "react-icons/fa";
+import { FaEdit, FaArrowLeft, FaTrash, FaPlus, FaImage } from "react-icons/fa";
 import LeftNav from "../LeftNav";
 import DashBoardHeader from "../DashBoardHeader";
 import { useAuthFetch } from "../../context/AuthFetch";
@@ -15,20 +15,16 @@ const ManageGallery = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
-  // State for all posts
-  const [posts, setPosts] = useState([]);
+  // State for all gallery items
+  const [galleryItems, setGalleryItems] = useState([]);
   
-  // Form state for selected post
+  // Form state for selected gallery item
   const [formData, setFormData] = useState({
     id: null,
     title: "",
-    summary: "",
     description: "",
-    category: "",
-    video_url: "",
-    thumbnail: null,
-    thumbnailPreview: null,
-    status: "draft"
+    image: null,
+    imagePreview: null
   });
 
   // Submission state
@@ -49,19 +45,6 @@ const ManageGallery = () => {
   // Base URL for images
   const BASE_URL = "https://mahadevaaya.com/eventmanagement/eventmanagement_backend";
 
-  // Options for category
-  const categoryOptions = [
-    "Travel", "Food", "Lifestyle", "Technology", "Education", 
-    "Entertainment", "Sports", "Politics", "Business", "Health"
-  ];
-
-  // Options for status
-  const statusOptions = [
-    { value: "draft", label: "Draft" },
-    { value: "published", label: "Published" },
-    { value: "archived", label: "Archived" }
-  ];
-
   // Check device width
   useEffect(() => {
     const checkDevice = () => {
@@ -75,43 +58,43 @@ const ManageGallery = () => {
     return () => window.removeEventListener("resize", checkDevice);
   }, []);
 
-  // Fetch all posts when auth is ready
+  // Fetch all gallery items when auth is ready
   useEffect(() => {
     // Only fetch when auth is not loading and user is authenticated
     if (!authLoading && isAuthenticated) {
-      fetchAllPosts();
+      fetchAllGalleryItems();
     }
   }, [authLoading, isAuthenticated]);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  // Fetch all posts from API
-  const fetchAllPosts = async () => {
+  // Fetch all gallery items from API
+  const fetchAllGalleryItems = async () => {
     setIsLoading(true);
     try {
       const response = await authFetch(
-        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/"
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/"
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch posts data");
+        throw new Error("Failed to fetch gallery data");
       }
 
       const result = await response.json();
-      console.log("GET All Posts API Response:", result);
+      console.log("GET All Gallery Items API Response:", result);
 
-      if (result.status && result.data && result.data.length > 0) {
-        // Process thumbnail URLs for all items
+      if (result.success && result.data && result.data.length > 0) {
+        // Process image URLs for all items
         const processedItems = result.data.map(item => ({
           ...item,
-          thumbnailUrl: item.thumbnail ? `${BASE_URL}${item.thumbnail}` : null
+          imageUrl: item.image ? `${BASE_URL}${item.image}` : null
         }));
-        setPosts(processedItems);
+        setGalleryItems(processedItems);
       } else {
-        setPosts([]);
+        setGalleryItems([]);
       }
     } catch (error) {
-      console.error("Error fetching posts data:", error);
+      console.error("Error fetching gallery data:", error);
       setMessage(error.message || "An error occurred while fetching data");
       setVariant("danger");
       setShowAlert(true);
@@ -120,64 +103,60 @@ const ManageGallery = () => {
     }
   };
 
-  // Fetch specific post data by ID
-  const fetchPostData = async (postId) => {
+  // Fetch specific gallery item data by ID
+  const fetchGalleryItemData = async (itemId) => {
     setIsLoading(true);
     try {
-      console.log("Fetching post with ID:", postId);
+      console.log("Fetching gallery item with ID:", itemId);
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/?id=${postId}`
+        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/?id=${itemId}`
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch post data. Status: ${response.status}`);
+        throw new Error(`Failed to fetch gallery item data. Status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("GET Post Details API Response:", result);
+      console.log("GET Gallery Item Details API Response:", result);
 
-      if (result.status) {
+      if (result.success) {
         let itemData;
         
         // Check if data is an array or a single object
         if (Array.isArray(result.data)) {
-          itemData = result.data.find(item => item.id.toString() === postId.toString());
+          itemData = result.data.find(item => item.id.toString() === itemId.toString());
           if (!itemData) {
-            throw new Error(`Post with ID ${postId} not found in response array`);
+            throw new Error(`Gallery item with ID ${itemId} not found in response array`);
           }
         } else if (result.data && result.data.id) {
-          if (result.data.id.toString() === postId.toString()) {
+          if (result.data.id.toString() === itemId.toString()) {
             itemData = result.data;
           } else {
-            throw new Error(`Returned item ID ${result.data.id} does not match requested ID ${postId}`);
+            throw new Error(`Returned item ID ${result.data.id} does not match requested ID ${itemId}`);
           }
         } else {
-          throw new Error("Invalid post data structure in response");
+          throw new Error("Invalid gallery item data structure in response");
         }
 
-        // Process thumbnail URL
-        const thumbnailUrl = itemData.thumbnail ? `${BASE_URL}${itemData.thumbnail}` : null;
+        // Process image URL
+        const imageUrl = itemData.image ? `${BASE_URL}${itemData.image}` : null;
 
         setFormData({
           id: itemData.id,
           title: itemData.title,
-          summary: itemData.summary,
           description: itemData.description,
-          category: itemData.category,
-          video_url: itemData.video_url,
-          thumbnail: null, // We don't store the actual thumbnail file, just the URL
-          thumbnailPreview: thumbnailUrl,
-          status: itemData.status
+          image: null, // We don't store the actual image file, just the URL
+          imagePreview: imageUrl
         });
 
-        setSelectedItemId(postId);
+        setSelectedItemId(itemId);
       } else {
         console.error("API Response issue:", result);
-        throw new Error(result.message || "No post data found in response");
+        throw new Error(result.message || "No gallery item data found in response");
       }
     } catch (error) {
-      console.error("Error fetching post data:", error);
-      setMessage(error.message || "An error occurred while fetching post data");
+      console.error("Error fetching gallery item data:", error);
+      setMessage(error.message || "An error occurred while fetching gallery item data");
       setVariant("danger");
       setShowAlert(true);
     } finally {
@@ -185,10 +164,10 @@ const ManageGallery = () => {
     }
   };
 
-  // Handle post card click
-  const handleItemClick = (postId) => {
-    console.log("Post card clicked with ID:", postId);
-    fetchPostData(postId);
+  // Handle gallery item card click
+  const handleItemClick = (itemId) => {
+    console.log("Gallery item card clicked with ID:", itemId);
+    fetchGalleryItemData(itemId);
   };
 
   // Handle form input changes
@@ -200,16 +179,16 @@ const ManageGallery = () => {
     }));
   };
 
-  // Handle thumbnail file change
-  const handleThumbnailChange = (e) => {
+  // Handle image file change
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData((prev) => ({
           ...prev,
-          thumbnail: file,
-          thumbnailPreview: reader.result,
+          image: file,
+          imagePreview: reader.result,
         }));
       };
       reader.readAsDataURL(file);
@@ -219,14 +198,14 @@ const ManageGallery = () => {
   // Reset form to original data
   const resetForm = () => {
     if (selectedItemId) {
-      fetchPostData(selectedItemId);
+      fetchGalleryItemData(selectedItemId);
     }
     setIsEditing(false);
     setShowAlert(false);
   };
 
-  // Go back to posts list
-  const backToPostsList = () => {
+  // Go back to gallery list
+  const backToGalleryList = () => {
     setSelectedItemId(null);
     setIsEditing(false);
     setShowAlert(false);
@@ -239,18 +218,14 @@ const ManageGallery = () => {
     setShowAlert(false);
   };
 
-  // Enable adding new post
-  const addNewPost = () => {
+  // Enable adding new gallery item
+  const addNewGalleryItem = () => {
     setFormData({
       id: null,
       title: "",
-      summary: "",
       description: "",
-      category: "",
-      video_url: "",
-      thumbnail: null,
-      thumbnailPreview: null,
-      status: "draft"
+      image: null,
+      imagePreview: null
     });
     setIsEditing(true);
     setSelectedItemId(null);
@@ -266,42 +241,38 @@ const ManageGallery = () => {
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
-      formDataToSend.append("summary", formData.summary);
       formDataToSend.append("description", formData.description);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("video_url", formData.video_url);
-      formDataToSend.append("status", formData.status);
       
-      if (formData.thumbnail) {
-        formDataToSend.append("thumbnail", formData.thumbnail);
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
       }
 
-      console.log("Submitting data for post:", formData.title);
+      console.log("Submitting data for gallery item:", formData.title);
 
       let response;
       let successMessage;
       
       if (formData.id) {
-        // Update existing post
+        // Update existing gallery item
         formDataToSend.append("id", formData.id);
         response = await authFetch(
-          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/`,
+          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/`,
           {
             method: "PUT",
             body: formDataToSend,
           }
         );
-        successMessage = "Post updated successfully!";
+        successMessage = "Gallery item updated successfully!";
       } else {
-        // Create new post
+        // Create new gallery item
         response = await authFetch(
-          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/",
+          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/",
           {
             method: "POST",
             body: formDataToSend,
           }
         );
-        successMessage = "Post created successfully!";
+        successMessage = "Gallery item created successfully!";
       }
 
       console.log("Response status:", response.status);
@@ -310,35 +281,35 @@ const ManageGallery = () => {
         const errorData = await response.json();
         console.error("Server error response:", errorData);
         throw new Error(
-          errorData.message || "Failed to save post details"
+          errorData.message || "Failed to save gallery item details"
         );
       }
 
       const result = await response.json();
       console.log("Success response:", result);
 
-      if (result.status) {
+      if (result.success) {
         setMessage(successMessage);
         setVariant("success");
         setShowAlert(true);
         setIsEditing(false);
         
-        // Refresh the posts list
-        await fetchAllPosts();
+        // Refresh the gallery items list
+        await fetchAllGalleryItems();
         
         // If creating a new item, switch to view mode for the new item
         if (!formData.id && result.data && result.data.id) {
-          fetchPostData(result.data.id);
+          fetchGalleryItemData(result.data.id);
         }
         
         setTimeout(() => setShowAlert(false), 3000);
       } else {
         throw new Error(
-          result.message || "Failed to save post details"
+          result.message || "Failed to save gallery item details"
         );
       }
     } catch (error) {
-      console.error("Error saving post details:", error);
+      console.error("Error saving gallery item details:", error);
       let errorMessage = "An unexpected error occurred. Please try again.";
 
       if (
@@ -360,7 +331,7 @@ const ManageGallery = () => {
     }
   };
 
-  // Handle delete post
+  // Handle delete gallery item
   const handleDeleteItem = async () => {
     if (!itemToDelete) return;
      
@@ -371,7 +342,7 @@ const ManageGallery = () => {
       formDataToSend.append("id", itemToDelete.id);
       
       const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/post/`,
+        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/`,
         {
           method: "DELETE",
           body: formDataToSend,
@@ -380,31 +351,31 @@ const ManageGallery = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete post");
+        throw new Error(errorData.message || "Failed to delete gallery item");
       }
 
       const result = await response.json();
       
-      if (result.status) {
-        setMessage("Post deleted successfully!");
+      if (result.success) {
+        setMessage("Gallery item deleted successfully!");
         setVariant("success");
         setShowAlert(true);
         
-        // Refresh the posts list
-        await fetchAllPosts();
+        // Refresh the gallery items list
+        await fetchAllGalleryItems();
         
         // If we were viewing the deleted item, go back to the list
         if (selectedItemId === itemToDelete.id) {
-          backToPostsList();
+          backToGalleryList();
         }
         
         setTimeout(() => setShowAlert(false), 3000);
       } else {
-        throw new Error(result.message || "Failed to delete post");
+        throw new Error(result.message || "Failed to delete gallery item");
       }
     } catch (error) {
-      console.error("Error deleting post:", error);
-      setMessage(error.message || "An error occurred while deleting the post");
+      console.error("Error deleting gallery item:", error);
+      setMessage(error.message || "An error occurred while deleting the gallery item");
       setVariant("danger");
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 5000);
@@ -490,9 +461,9 @@ const ManageGallery = () => {
 
           <Container fluid className="dashboard-body dashboard-main-container">
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h1 className="page-title mb-0">Manage Posts</h1>
-              <Button variant="primary" onClick={addNewPost}>
-                <FaPlus /> Add New Post
+              <h1 className="page-title mb-0">Manage Gallery</h1>
+              <Button variant="primary" onClick={addNewGalleryItem}>
+                <FaPlus /> Add New Item
               </Button>
             </div>
 
@@ -513,30 +484,30 @@ const ManageGallery = () => {
                 <div className="spinner-border text-primary" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
-                <p className="mt-2">Loading Posts...</p>
+                <p className="mt-2">Loading Gallery Items...</p>
               </div>
             ) : (
               <>
                 {!selectedItemId ? (
-                  // Posts List View
+                  // Gallery Items List View
                   <>
                     <Row className="mb-4">
                       <Col>
-                        {posts.length === 0 ? (
+                        {galleryItems.length === 0 ? (
                           <Alert variant="info">
-                            No posts found. Click "Add New Post" to create one.
+                            No Gallery items found. Click "Add New Item" to create one.
                           </Alert>
                         ) : (
                           <Row>
-                            {posts.map((item) => (
+                            {galleryItems.map((item) => (
                               <Col md={6} lg={4} className="mb-4" key={item.id}>
-                                <Card className="h-100 post-card profile-card">
+                                <Card className="h-100 gallery-item-card profile-card">
                                   <Card.Body className="d-flex flex-column">
                                     <div className="flex-grow-1">
-                                      {item.thumbnail ? (
+                                      {item.image ? (
                                         <div className="mb-3 text-center">
                                           <img 
-                                            src={getImageUrl(item.thumbnail)} 
+                                            src={getImageUrl(item.image)} 
                                             alt={item.title} 
                                             className="img-fluid rounded"
                                             style={{ maxHeight: "150px" }}
@@ -549,30 +520,17 @@ const ManageGallery = () => {
                                       ) : (
                                         <div className="mb-3 text-center bg-light p-4 rounded">
                                           <FaImage size={50} color="#ccc" />
-                                          <p className="text-muted mt-2">No Thumbnail</p>
+                                          <p className="text-muted mt-2">No Image</p>
                                         </div>
                                       )}
                                       <Card.Title as="h5" className="mb-3">
                                         {item.title}
                                       </Card.Title>
                                       <Card.Text className="text-muted mb-2">
-                                        {item.summary && item.summary.length > 100 
-                                          ? `${item.summary.substring(0, 100)}...` 
-                                          : item.summary}
+                                        {item.description && item.description.length > 100 
+                                          ? `${item.description.substring(0, 100)}...` 
+                                          : item.description}
                                       </Card.Text>
-                                      <div className="mb-2">
-                                        <Badge bg="info" className="me-2">{item.category}</Badge>
-                                        <Badge bg={item.status === 'published' ? 'success' : 'secondary'}>
-                                          {item.status}
-                                        </Badge>
-                                      </div>
-                                      {item.video_url && (
-                                        <div className="mb-2">
-                                          <a href={item.video_url} target="_blank" rel="noopener noreferrer" className="text-primary">
-                                            <FaVideo /> Watch Video
-                                          </a>
-                                        </div>
-                                      )}
                                       <Card.Text className="text-muted mb-3">
                                         <small>Created: {formatDate(item.created_at)}</small>
                                       </Card.Text>
@@ -603,17 +561,17 @@ const ManageGallery = () => {
                     </Row>
                   </>
                 ) : (
-                  // Post Edit View
+                  // Gallery Item Edit View
                   <>
                     <div className="d-flex justify-content-between align-items-center mb-4">
-                      <Button variant="outline-secondary" onClick={backToPostsList}>
-                        <FaArrowLeft /> Back to Posts List
+                      <Button variant="outline-secondary" onClick={backToGalleryList}>
+                        <FaArrowLeft /> Back to Gallery List
                       </Button>
                     </div>
 
                     <Card className="mb-4">
                       <Card.Header as="h5">
-                        {formData.id ? `Edit Post: ${formData.title}` : "Add New Post"}
+                        {formData.id ? `Edit Gallery Item: ${formData.title}` : "Add New Gallery Item"}
                       </Card.Header>
                       <Card.Body>
                         <Form onSubmit={handleSubmit}>
@@ -621,22 +579,9 @@ const ManageGallery = () => {
                             <Form.Label>Title</Form.Label>
                             <Form.Control
                               type="text"
-                              placeholder="Enter post title"
+                              placeholder="Enter gallery item title"
                               name="title"
                               value={formData.title}
-                              onChange={handleChange}
-                              required
-                              disabled={!isEditing}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>Summary</Form.Label>
-                            <Form.Control
-                              type="text"
-                              placeholder="Enter post summary"
-                              name="summary"
-                              value={formData.summary}
                               onChange={handleChange}
                               required
                               disabled={!isEditing}
@@ -648,7 +593,7 @@ const ManageGallery = () => {
                             <Form.Control
                               as="textarea"
                               rows={4}
-                              placeholder="Enter post description"
+                              placeholder="Enter gallery item description"
                               name="description"
                               value={formData.description}
                               onChange={handleChange}
@@ -658,62 +603,16 @@ const ManageGallery = () => {
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
-                            <Form.Select
-                              name="category"
-                              value={formData.category}
-                              onChange={handleChange}
-                              disabled={!isEditing}
-                              required
-                            >
-                              <option value="">Select a category</option>
-                              {categoryOptions.map((option) => (
-                                <option key={option} value={option}>
-                                  {option}
-                                </option>
-                              ))}
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>Video URL</Form.Label>
-                            <Form.Control
-                              type="url"
-                              placeholder="Enter video URL"
-                              name="video_url"
-                              value={formData.video_url}
-                              onChange={handleChange}
-                              disabled={!isEditing}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>Status</Form.Label>
-                            <Form.Select
-                              name="status"
-                              value={formData.status}
-                              onChange={handleChange}
-                              disabled={!isEditing}
-                            >
-                              {statusOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </Form.Select>
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>Thumbnail</Form.Label>
-                            {formData.thumbnailPreview ? (
+                            <Form.Label>Image</Form.Label>
+                            {formData.imagePreview ? (
                               <div className="mb-3">
                                 <img 
-                                  src={formData.thumbnailPreview} 
+                                  src={formData.imagePreview} 
                                   alt="Preview" 
                                   className="img-fluid rounded"
                                   style={{ maxHeight: "200px" }}
                                   onError={(e) => {
-                                    console.error("Thumbnail preview failed to load:", e.target.src);
+                                    console.error("Image preview failed to load:", e.target.src);
                                     e.target.src = "https://picsum.photos/seed/placeholder/300/200.jpg";
                                   }}
                                 />
@@ -721,14 +620,14 @@ const ManageGallery = () => {
                             ) : (
                               <div className="mb-3 text-center bg-light p-4 rounded">
                                 <FaImage size={50} color="#ccc" />
-                                <p className="text-muted mt-2">No Thumbnail</p>
+                                <p className="text-muted mt-2">No Image</p>
                               </div>
                             )}
                             {isEditing && (
                               <Form.Control
                                 type="file"
                                 accept="image/*"
-                                onChange={handleThumbnailChange}
+                                onChange={handleImageChange}
                               />
                             )}
                           </Form.Group>
@@ -762,14 +661,14 @@ const ManageGallery = () => {
                             onClick={enableEditing}
                             type="button"
                           >
-                            <FaEdit /> Edit Post Details
+                            <FaEdit /> Edit Item Details
                           </Button>
                           <Button
                             variant="outline-danger"
                             onClick={() => showDeleteConfirmation(formData)}
                             type="button"
                           >
-                            <FaTrash /> Delete Post
+                            <FaTrash /> Delete Item
                           </Button>
                         </>
                       )}
@@ -788,7 +687,7 @@ const ManageGallery = () => {
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to delete the post "{itemToDelete?.title}"? This action cannot be undone.
+          Are you sure you want to delete the gallery item "{itemToDelete?.title}"? This action cannot be undone.
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>

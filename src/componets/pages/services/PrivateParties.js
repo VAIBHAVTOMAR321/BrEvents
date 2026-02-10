@@ -1,44 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../../assets/images/education/campus-5.webp";
 import { Container } from 'react-bootstrap';
-import { useLanguage } from '../../context/LanguageContext';
 import "../../../assets/css/Services.css";
 
 function PrivateParties() {
-  const { language } = useLanguage();
   const [corporateData, setCorporateData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
 
-  // Get field names based on language
-  const getTitleField = () => language === 'hi' ? 'title_hi' : 'title';
-  const getDescriptionField = () => language === 'hi' ? 'description_hi' : 'description';
-  const getModuleField = () => language === 'hi' ? 'module_hi' : 'module';
-
   // Fetch corporate event data from API
   useEffect(() => {
     const fetchCorporateData = async () => {
-      setLoading(true);
-      setCorporateData(null); // Clear previous data when language changes
       try {
-        const langParam = language === 'hi' ? 'hi' : 'en';
-        const apiUrl = `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/private-parties-event-service/?lang=${langParam}`;
-        
-        console.log(`Fetching private parties data from: ${apiUrl}`);
-        
-        const response = await fetch(apiUrl);
+        const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/private-parties-event-service/');
         const data = await response.json();
         
-        console.log(`Private Parties API Response (${langParam}):`, data);
+        console.log('Corporate Events API Response:', data); // Debug log
         
         if (data.success && data.data.length > 0) {
           setCorporateData(data.data[0]);
         } else {
-          throw new Error('No private parties event data available');
+          throw new Error('No corporate event data available');
         }
       } catch (err) {
-        console.error('Error fetching private parties event data:', err);
+        console.error('Error fetching corporate event data:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -46,7 +32,7 @@ function PrivateParties() {
     };
 
     fetchCorporateData();
-  }, [language]);
+  }, []);
 
   // Handle image loading errors
   const handleImageError = () => {
@@ -56,44 +42,24 @@ function PrivateParties() {
 
   // Extract service items from module array
   const getServiceItems = () => {
-    if (!corporateData) return [];
+    if (!corporateData || !corporateData.module) return [];
     
-    const moduleField = getModuleField();
-    const modules = corporateData[moduleField];
-    
-    if (!modules || !Array.isArray(modules)) return [];
-    
-    // Handle array format [[title, subtitle], ...] from API
-    return modules.map((item, index) => {
-      if (Array.isArray(item)) {
-        return {
-          id: index,
-          title: item[0] || "",
-          subtitle: item[1] || ""
-        };
-      } else if (typeof item === 'string') {
-        return {
-          id: index,
-          title: item || "",
-          subtitle: ""
-        };
-      } else if (item && typeof item === 'object') {
-        return {
-          id: index,
-          title: item.title || "",
-          subtitle: item.subtitle || ""
-        };
-      }
-      return null;
-    }).filter(item => item && item.title);
+    return corporateData.module.filter(item => {
+      // Filter out items with empty titles and subtitles
+      return item.title || item.subtitle;
+    });
   };
 
-  // Extract main description
+  // Extract main description from module array
   const getMainDescription = () => {
-    if (!corporateData) return "";
+    if (!corporateData || !corporateData.module) return "";
     
-    const descField = getDescriptionField();
-    return corporateData[descField] || "";
+    // Find the first module with a subtitle but no title (main description)
+    const mainDesc = corporateData.module.find(item => 
+      !item.title && item.subtitle
+    );
+    
+    return mainDesc ? mainDesc.subtitle : "";
   };
 
 // Construct image URL - Fixed version
@@ -121,11 +87,13 @@ const getImageUrl = () => {
   if (error) {
     return (
       <div className="alert alert-warning m-3" role="alert">
-        Error loading private parties event information: {error}. Using default content.
+        Error loading corporate event information: {error}. Using default content.
       </div>
     );
   }
 
+  const serviceItems = getServiceItems();
+  const mainDescription = getMainDescription();
   const imageUrl = getImageUrl();
 
   return (
@@ -138,26 +106,22 @@ const getImageUrl = () => {
             {/* Left Content Column */}
             <div className="col-lg-6">
               <div className="about-content" data-aos="fade-up" data-aos-delay="200">
-                <h2>{corporateData ? corporateData[getTitleField()] || "Private Parties" : "Private Parties"}</h2>
+                <h2>{corporateData ? corporateData.title : "Professional Corporate Events"}</h2>
                 <p>
-                  {getMainDescription() && getMainDescription().length > 0
-                    ? getMainDescription()
-                    : (language === 'hi' 
-                      ? "हम छोटे पैमाने की निजी पार्टियों और सामाजिक कार्यक्रमों की योजना, डिज़ाइन और प्रबंधन में माहिर हैं।" 
-                      : "We specialize in planning, designing, and managing private parties and social gatherings."
-                    )
+                  {mainDescription || 
+                    "We specialize in planning, designing, and managing professional corporate events that perfectly align with your brand, goals, and business objectives."
                   }
                 </p>
 
                 <div className="services-list">
-                  {getServiceItems().map((item, index) => (
-                    <div className="service-item" key={item.id || index}>
+                  {serviceItems.map((item, index) => (
+                    <div className="service-item" key={index}>
                       <div className="service-icon">
                         <i className=""></i>
                       </div>
                       <div className="service-content">
                         {item.title && <h4>{item.title}</h4>}
-                        {item.subtitle && <p className="text-muted">{item.subtitle}</p>}
+                        {item.subtitle && <p>{item.subtitle}</p>}
                       </div>
                     </div>
                   ))}
@@ -179,9 +143,9 @@ const getImageUrl = () => {
               {/* Additional Content Below Image */}
               <div className="image-caption mt-3" data-aos="fade-up" data-aos-delay="400">
                 <p className="text-muted">
-                  {corporateData && corporateData[getDescriptionField()] && corporateData[getDescriptionField()].length > 0
-                    ? corporateData[getDescriptionField()] 
-                    : ""
+                  {corporateData && corporateData.description ? 
+                    corporateData.description : 
+                    "."
                   }
                 </p>
               </div>
