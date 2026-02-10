@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Registration from './Registration'; // Import the Registration component
 import { Button, Container, Form, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,19 +7,24 @@ function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showMessageModal, setShowMessageModal] = useState(false); // Modal for showing messages
-  const [messageContent, setMessageContent] = useState(''); // Content for the message modal
-  const [userEmail, setUserEmail] = useState('');
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
   const [userId, setUserId] = useState(null);
   const [checkingUser, setCheckingUser] = useState(false);
   const [registeringForEvent, setRegisteringForEvent] = useState(null);
   const [registrationMessage, setRegistrationMessage] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all'); // For filtering events
-  const [pendingEventId, setPendingEventId] = useState(null); // Store event ID if registration is pending
-  const [isRegistrationActive, setIsRegistrationActive] = useState(false); // Track if registration is active
-  const [userVerified, setUserVerified] = useState(false); // Track if user is verified
+  const [activeFilter, setActiveFilter] = useState('all');
+  
+  // State for simplified registration form
+  const [showSimplifiedRegistration, setShowSimplifiedRegistration] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [userExists, setUserExists] = useState(false);
+  const [userData, setUserData] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    participant_type: 'audience'
+  });
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -63,7 +67,7 @@ function Events() {
     fetchEvents();
   }, []);
 
-  // Updated checkUserExists to return user ID and verification status
+  // Function to check if user exists
   const checkUserExists = async (email) => {
     if (!email) {
       setError('Please enter your email address');
@@ -86,7 +90,6 @@ function Events() {
       if (!response.ok) {
         if (response.status === 404) {
           setUserId(null);
-          setUserVerified(false);
           return { exists: false, userId: null, isVerified: false };
         }
         throw new Error(`Server returned ${response.status}: ${response.statusText}`);
@@ -103,18 +106,22 @@ function Events() {
       
       if (data.user_id) {
         setUserId(data.user_id);
-        // Check if user is verified
-        const isUserVerified = data.is_verified === true;
-        setUserVerified(isUserVerified);
+        
+        // Update user data with existing information
+        setUserData(prevData => ({
+          ...prevData,
+          full_name: data.full_name || '',
+          email: data.email || email,
+          phone: data.phone || ''
+        }));
         
         return { 
           exists: true, 
           userId: data.user_id, 
-          isVerified: isUserVerified 
+          isVerified: data.is_verified === true
         };
       } else {
         setUserId(null);
-        setUserVerified(false);
         return { exists: false, userId: null, isVerified: false };
       }
     } catch (err) {
@@ -126,24 +133,33 @@ function Events() {
     }
   };
 
-  // FIXED: Updated registerForEvent function with proper error handling
+  // Function to register for event
   const registerForEvent = async (eventId, userIdParam = null) => {
     const currentUserId = userIdParam || userId;
     
-    if (!currentUserId) {
-      setShowEmailModal(true);
-      setPendingEventId(eventId);
-      return;
-    }
-
     setRegisteringForEvent(eventId);
     setRegistrationMessage('');
 
     try {
-      const payload = {
-        event_id: eventId,
-        user_id: currentUserId
-      };
+      let payload;
+      
+      if (userExists && currentUserId) {
+        // For existing users
+        payload = {
+          event_id: eventId,
+          user_id: currentUserId,
+          participant_type: userData.participant_type
+        };
+      } else {
+        // For new users
+        payload = {
+          event_id: eventId,
+          full_name: userData.full_name,
+          email: userData.email,
+          phone: userData.phone,
+          participant_type: userData.participant_type
+        };
+      }
       
       console.log('Sending registration payload:', payload);
       
@@ -170,8 +186,13 @@ function Events() {
       console.log('Registration response:', data);
       
       if (!response.ok) {
-        let errorMessage = `Server returned ${response.status}: ${response.statusText}`;
-        if (data.message) {
+        let errorMessage = '';
+        
+        // Handle different error response formats
+        if (Array.isArray(data) && data.length > 0) {
+          // If response is an array of error messages
+          errorMessage = data.join(', ');
+        } else if (data.message) {
           errorMessage = data.message;
         } else if (data.error) {
           errorMessage = data.error;
@@ -181,119 +202,63 @@ function Events() {
           errorMessage = Array.isArray(data.non_field_errors) 
             ? data.non_field_errors.join(', ') 
             : data.non_field_errors;
+        } else {
+          errorMessage = `Server returned ${response.status}: ${response.statusText}`;
         }
+        
         throw new Error(errorMessage);
       }
       
       setRegistrationMessage('Successfully registered for the event!');
       setMessageContent('Successfully registered for the event!');
       setShowMessageModal(true);
+      setShowSimplifiedRegistration(false);
       console.log('Registration successful:', data);
     } catch (err) {
       console.error('Error registering for event:', err);
       
-      // Check if this is the "already participated" error
-      if (err.message && err.message.includes('You have already participated in this event')) {
-        setRegistrationMessage(err.message);
-        setMessageContent(err.message);
-      } else {
-        // For other errors, keep the prefix
-        setRegistrationMessage('Error registering for event: ' + err.message);
-        setMessageContent('Error registering for event: ' + err.message);
-      }
-      
+      // Display the error message directly without prefix for better UX
+      setRegistrationMessage(err.message);
+      setMessageContent(err.message);
       setShowMessageModal(true);
     } finally {
       setRegisteringForEvent(null);
     }
   };
 
-  const handleRegisterClick = (eventId) => {
-    setPendingEventId(eventId);
-    if (userId && userVerified) {
-      registerForEvent(eventId);
-    } else {
-      setShowEmailModal(true);
-    }
+  const handleRegisterClick = (event) => {
+    setSelectedEvent(event);
+    setShowSimplifiedRegistration(true);
+    setUserExists(false);
+    setUserData({
+      full_name: '',
+      email: '',
+      phone: '',
+      participant_type: 'audience'
+    });
   };
 
-  // Updated handleEmailSubmit to use the returned user ID and verification status
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
+  // Handle email input change and check if user exists
+  const handleEmailChange = async (e) => {
+    const email = e.target.value;
+    setUserData(prevData => ({ ...prevData, email }));
     
-    if (!userEmail) {
-      setError('Please enter your email address');
-      return;
-    }
-
-    const { exists, userId: returnedUserId, isVerified } = await checkUserExists(userEmail);
-    
-    if (exists) {
-      if (isVerified) {
-        setShowEmailModal(false);
-        setMessageContent('Now you can apply for events');
-        setShowMessageModal(true);
-        
-        if (pendingEventId) {
-          registerForEvent(pendingEventId, returnedUserId);
-          setPendingEventId(null);
-        }
-      } else {
-        // User exists but is not verified, redirect to registration
-        setShowEmailModal(false);
-        setMessageContent('Your account is not verified. Please complete registration.');
-        setShowMessageModal(true);
-        setTimeout(() => {
-          setShowRegistrationModal(true);
-          setIsRegistrationActive(true);
-        }, 2000); // Show message for 2 seconds before opening registration
-      }
-    } else {
-      setShowEmailModal(false);
-      setShowRegistrationModal(true);
-      setIsRegistrationActive(true);
-    }
-  };
-
-  const handleCheckEmail = async () => {
-    const { exists, isVerified } = await checkUserExists(userEmail);
-    
-    if (exists) {
-      if (isVerified) {
-        setMessageContent('Now you can apply for events');
-        setShowMessageModal(true);
-      } else {
-        setMessageContent('Your account is not verified. Please complete registration.');
-        setShowMessageModal(true);
-        setTimeout(() => {
-          setShowRegistrationModal(true);
-          setIsRegistrationActive(true);
-        }, 2000);
-      }
-    } else {
-      setShowRegistrationModal(true);
-    }
-  };
-
-  // Updated handleRegistrationSuccess to use the returned user ID
-  const handleRegistrationSuccess = (userData) => {
-    setUserEmail(userData.email);
-    setShowRegistrationModal(false);
-    setIsRegistrationActive(false);
-    setMessageContent('Registration successful! Now you can apply for events.');
-    setShowMessageModal(true);
-    
-    // Check if user exists and get the user ID
-    const checkAndRegister = async () => {
-      const { exists, userId: returnedUserId, isVerified } = await checkUserExists(userData.email);
+    if (email && email.includes('@')) {
+      const { exists, userId: returnedUserId } = await checkUserExists(email);
+      setUserExists(exists);
       
-      if (exists && isVerified && pendingEventId) {
-        registerForEvent(pendingEventId, returnedUserId);
-        setPendingEventId(null);
+      if (exists) {
+        setUserId(returnedUserId);
       }
-    };
-    
-    checkAndRegister();
+    }
+  };
+
+  // Handle form submission
+  const handleRegistrationSubmit = (e) => {
+    e.preventDefault();
+    if (selectedEvent) {
+      registerForEvent(selectedEvent.event_id);
+    }
   };
 
   // Improved date formatting function
@@ -302,7 +267,7 @@ function Events() {
     
     const date = new Date(dateString);
     const options = { day: 'numeric', month: 'short', year: 'numeric' };
-    const formattedDate = date.toLocaleDateString('en-US', options); // e.g., "15 Jan 2024"
+    const formattedDate = date.toLocaleDateString('en-US', options);
     
     const parts = formattedDate.split(' ');
     return {
@@ -374,190 +339,259 @@ function Events() {
     );
   }
 
-  // Conditionally render events or registration
-  if (isRegistrationActive) {
-    return (
-      <Registration 
-        email={userEmail}
-        onRegistrationSuccess={handleRegistrationSuccess}
-        fromEvent={true} // Indicate that registration was initiated from events page
-        pendingEventId={pendingEventId}
-      />
-    );
-  }
-
   return (
     <div>
-    <Container className='box-shadow'>
-      <section id="events" className="events section-gallery">
-        {/* Only show registration message for successful registration */}
-        {registrationMessage && registrationMessage.includes('Successfully') && (
-          <div className="container mb-4">
-            <div className="alert alert-success" role="alert">
-              {registrationMessage}
+      <Container className='box-shadow'>
+        <section id="events" className="events section-gallery">
+          {/* Only show registration message for successful registration */}
+          {registrationMessage && registrationMessage.includes('Successfully') && (
+            <div className="container mb-4">
+              <div className="alert alert-success" role="alert">
+                {registrationMessage}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="container" data-aos="fade-up" data-aos-delay="100">
-          <div className="row section-title g-4">
-             
-            {filteredEvents.map((event, index) => {
-              // Using the new formatDate function
-              const { day, monthYear } = formatDate(event.event_date_time);
-              const time = formatTime(event.event_date_time);
-              const status = getStatusBadge(event);
-              const aosDelay = 200 + (index % 3) * 100;
+          <div className="container" data-aos="fade-up" data-aos-delay="100">
+            <div className="row section-title g-4">
+               
+              {filteredEvents.map((event, index) => {
+                const { day, monthYear } = formatDate(event.event_date_time);
+                const time = formatTime(event.event_date_time);
+                const status = getStatusBadge(event);
+                const aosDelay = 200 + (index % 3) * 100;
 
-              return (
-                <div key={event.id} className="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay={aosDelay}>
-                  <div className={`event-item ${status.className}`}>
-                    <div className="event-header">
-                      <div className="event-date-overlay">
-                        {/* Fixed: Added space between day and monthYear */}
-                        <span className="date">{day} {monthYear}</span>
-                      </div>
-                      <div className="event-status-badge">
-                        <span className={`badge ${status.className}`}>{status.text}</span>
-                      </div>
-                    </div>
-                    <div className="event-details">
-                      <div className="event-category">
-                        <span className={`badge ${getBadgeClass(event.event_type)}`}>
-                          {event.event_type || 'Event'}
-                        </span>
-                        <span className="event-time">{time}</span>
-                      </div>
-                      <h3>{event.event_name}</h3>
-                      <p>{event.description}</p>
-                      <div className="event-info">
-                        {/* Added a clear display for the event type */}
-                        <div className="info-row">
-                          <i className="bi bi-tag"></i>
-                          <span>Type: {event.event_type || 'General'}</span>
+                return (
+                  <div key={event.id} className="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay={aosDelay}>
+                    <div className={`event-item ${status.className}`}>
+                      <div className="event-header">
+                        <div className="event-date-overlay">
+                          <span className="date">{day} {monthYear}</span>
                         </div>
-                        <div className="info-row">
-                          <i className="bi bi-geo-alt"></i>
-                          <span>{event.venue}</span>
+                        <div className="event-status-badge">
+                          <span className={`badge ${status.className}`}>{status.text}</span>
                         </div>
                       </div>
-                      <div className="event-footer">
-                        {!event.is_past && (
-                          <button 
-                            className="register-btn"
-                            onClick={() => handleRegisterClick(event.event_id)}
-                            disabled={registeringForEvent === event.event_id}
-                          >
-                            {registeringForEvent === event.event_id ? 'Registering...' : 'Register Now'}
-                          </button>
-                        )}
-                        {event.is_past && (
-                          <button className="register-btn" disabled>
-                            Event Ended
-                          </button>
-                        )}
+                      <div className="event-details">
+                        <div className="event-category">
+                          <span className={`badge ${getBadgeClass(event.event_type)}`}>
+                            {event.event_type || 'Event'}
+                          </span>
+                          <span className="event-time">{time}</span>
+                        </div>
+                        <h3>{event.event_name}</h3>
+                        <p>{event.description}</p>
+                        <div className="event-info">
+                          <div className="info-row">
+                            <i className="bi bi-tag"></i>
+                            <span>Type: {event.event_type || 'General'}</span>
+                          </div>
+                          <div className="info-row">
+                            <i className="bi bi-geo-alt"></i>
+                            <span>{event.venue}</span>
+                          </div>
+                        </div>
+                        <div className="event-footer">
+                          {!event.is_past && (
+                            <button 
+                              className="register-btn"
+                              onClick={() => handleRegisterClick(event)}
+                              disabled={registeringForEvent === event.event_id}
+                            >
+                              {registeringForEvent === event.event_id ? 'Registering...' : 'Register Now'}
+                            </button>
+                          )}
+                          {event.is_past && (
+                            <button className="register-btn" disabled>
+                              Event Ended
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
 
-          <div className="events-navigation" data-aos="fade-up" data-aos-delay="500">
-            <div className="row align-items-center">
-              <div className="col-md-8">
-                <div className="filter-tabs">
-                  <button 
-                    className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`} 
-                    onClick={() => setActiveFilter('all')}
-                  >
-                    All Events
-                  </button>
-                  <button 
-                    className={`filter-tab ${activeFilter === 'upcoming' ? 'active' : ''}`} 
-                    onClick={() => setActiveFilter('upcoming')}
-                  >
-                    Upcoming
-                  </button>
-                  <button 
-                    className={`filter-tab ${activeFilter === 'present' ? 'active' : ''}`} 
-                    onClick={() => setActiveFilter('present')}
-                  >
-                    Ongoing
-                  </button>
-                  <button 
-                    className={`filter-tab ${activeFilter === 'past' ? 'active' : ''}`} 
-                    onClick={() => setActiveFilter('past')}
-                  >
-                    Past
-                  </button>
+            <div className="events-navigation" data-aos="fade-up" data-aos-delay="500">
+              <div className="row align-items-center">
+                <div className="col-md-8">
+                  <div className="filter-tabs">
+                    <button 
+                      className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`} 
+                      onClick={() => setActiveFilter('all')}
+                    >
+                      All Events
+                    </button>
+                    <button 
+                      className={`filter-tab ${activeFilter === 'upcoming' ? 'active' : ''}`} 
+                      onClick={() => setActiveFilter('upcoming')}
+                    >
+                      Upcoming
+                    </button>
+                    <button 
+                      className={`filter-tab ${activeFilter === 'present' ? 'active' : ''}`} 
+                      onClick={() => setActiveFilter('present')}
+                    >
+                      Ongoing
+                    </button>
+                    <button 
+                      className={`filter-tab ${activeFilter === 'past' ? 'active' : ''}`} 
+                      onClick={() => setActiveFilter('past')}
+                    >
+                      Past
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="col-md-4 text-end">
-                <a href="#" className="view-calendar-btn">
-                  <i className="bi bi-calendar3"></i>
-                  View Calendar
-                </a>
+                <div className="col-md-4 text-end">
+                  <a href="#" className="view-calendar-btn">
+                    <i className="bi bi-calendar3"></i>
+                    View Calendar
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Enter Your Email</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleEmailSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Email Address</Form.Label>
-              <Form.Control
-                type="email"
-                placeholder="Enter your email address"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                required
-              />
-              <Form.Text className="text-muted">
-                We'll check if you have an account with us.
-              </Form.Text>
-            </Form.Group>
-            <div className="d-flex justify-content-end">
-              <Button variant="secondary" className="event-cancel-right" onClick={() => setShowEmailModal(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" type="submit" disabled={checkingUser}>
-                {checkingUser ? 'Checking...' : 'Continue'}
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
-
-      {/* Message Modal */}
-      <Modal show={showMessageModal} onHide={() => setShowMessageModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Information</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className='modal-p'>
-          <p>{messageContent}</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" onClick={() => setShowMessageModal(false)}>
-            OK
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {showRegistrationModal && (
-        <Registration 
-          email={userEmail}
-          onRegistrationSuccess={handleRegistrationSuccess}
+        {/* Simplified Registration Modal */}
+        <Modal show={showSimplifiedRegistration} onHide={() => setShowSimplifiedRegistration(false)} centered size="lg">
+  <Modal.Header closeButton>
+    <Modal.Title>Event Registration</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form onSubmit={handleRegistrationSubmit}>
+      {/* Event Information Fields */}
+      <Form.Group className="mb-3">
+        <Form.Label>Event Name</Form.Label>
+        <Form.Control
+          type="text"
+          value={selectedEvent ? selectedEvent.event_name : ''}
+          readOnly
+          className="bg-light"
         />
+      </Form.Group>
+      
+      <Form.Group className="mb-3">
+        <Form.Label>Event ID</Form.Label>
+        <Form.Control
+          type="text"
+          value={selectedEvent ? selectedEvent.event_id : ''}
+          readOnly
+          className="bg-light"
+        />
+      </Form.Group>
+      
+      <Form.Group className="mb-3">
+        <Form.Label>Email Address</Form.Label>
+        <Form.Control
+          type="email"
+          placeholder="Enter your email address"
+          value={userData.email}
+          onChange={handleEmailChange}
+          required
+        />
+        <Form.Text className="text-muted">
+          {userExists ? "We found your account. Your details have been pre-filled." : "New to our events? Please fill in your details below."}
+        </Form.Text>
+      </Form.Group>
+      
+      {userExists ? (
+        <>
+          <Form.Group className="mb-3">
+            <Form.Label>Full Name</Form.Label>
+            <Form.Control
+              type="text"
+              value={userData.full_name}
+              disabled
+              className="bg-light"
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Phone Number</Form.Label>
+            <Form.Control
+              type="tel"
+              value={userData.phone}
+              disabled
+              className="bg-light"
+            />
+          </Form.Group>
+          
+          <div className="alert alert-info">
+            <p>Welcome back! Your account has been found.</p>
+            <p>If you need to update your information, please contact our support team.</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <Form.Group className="mb-3">
+            <Form.Label>Full Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter your full name"
+              value={userData.full_name}
+              onChange={(e) => setUserData(prevData => ({ ...prevData, full_name: e.target.value }))}
+              required
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Phone Number</Form.Label>
+            <Form.Control
+              type="tel"
+              placeholder="Enter your phone number"
+              value={userData.phone}
+              onChange={(e) => setUserData(prevData => ({ ...prevData, phone: e.target.value }))}
+              required
+            />
+          </Form.Group>
+        </>
       )}
-    </Container>
+      
+      <Form.Group className="mb-3">
+        <Form.Label>Participant Type</Form.Label>
+        <Form.Select
+          value={userData.participant_type}
+          onChange={(e) => setUserData(prevData => ({ ...prevData, participant_type: e.target.value }))}
+          required
+        >
+          <option value="audience">Audience</option>
+          <option value="participant">Participant</option>
+          <option value="volunteer">Volunteer</option>
+          <option value="speaker">Speaker</option>
+          <option value="organizer">Organizer</option>
+        </Form.Select>
+      </Form.Group>
+      
+      <div className="d-flex justify-content-end">
+        <Button variant="secondary" className="me-2" onClick={() => setShowSimplifiedRegistration(false)}>
+          Cancel
+        </Button>
+        <Button variant="primary" type="submit" disabled={registeringForEvent}>
+          {registeringForEvent ? 'Registering...' : 'Register for Event'}
+        </Button>
+      </div>
+    </Form>
+  </Modal.Body>
+</Modal>
+
+{/* Message Modal */}
+<Modal show={showMessageModal} onHide={() => setShowMessageModal(false)} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Information</Modal.Title>
+  </Modal.Header>
+  <Modal.Body className='modal-p'>
+    <p>{messageContent}</p>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="primary" onClick={() => setShowMessageModal(false)}>
+      OK
+    </Button>
+  </Modal.Footer>
+</Modal>
+      </Container>
     </div>
   );
 }
