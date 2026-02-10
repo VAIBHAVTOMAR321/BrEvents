@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import EducationImage from "../../assets/images/education/campus-5.webp";
+import "../../assets/css/imageTransitions.css";
+
+// Array of cinematic animation classes for smooth image transitions
+const animationClasses = [
+  'carousel-item-animation-kenburns',
+  'carousel-item-animation-pan-right',
+  'carousel-item-animation-pan-down',
+  'carousel-item-animation-kenburns-reverse',
+  'carousel-item-animation-pan-left',
+  'carousel-item-animation-pan-diagonal-tl',
+  'carousel-item-animation-zoom',
+  'carousel-item-animation-pan-diagonal-br',
+  'carousel-item-animation-breathing',
+  'carousel-item-animation-pan-up'
+];
 
 function AboutUs() {
   const [aboutData, setAboutData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [animationIndex] = useState(0);
   const id = 3;
   
   // Fetch about us data from API
@@ -91,6 +107,11 @@ function AboutUs() {
     });
   };
 
+  // Get animation class based on index for cinematic effect
+  const getAnimationClass = () => {
+    return animationClasses[animationIndex % animationClasses.length];
+  };
+
   // Construct image URL
   const getImageUrl = () => {
     if (!aboutData || !aboutData.image) return EducationImage;
@@ -172,14 +193,40 @@ function AboutUs() {
               </div>
             </div>
 
-            <div className="col-lg-6 mt-4">
+
+            <div className="col-lg-6">
               <div className="about-image" data-aos="zoom-in" data-aos-delay="300">
-                <img 
-                  src={imageError ? EducationImage : imageUrl} 
-                  className="img-fluid" 
-                  alt="About Us Image"
-                  onError={handleImageError}
-                />
+                <div
+                  className="image-transition-wrapper"
+                  style={{
+                    width: '100%',
+                    maxWidth: '500px',
+                    height: '350px',
+                    minHeight: '220px',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    margin: '0 auto',
+                    background: '#eee',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.08)'
+                  }}
+                >
+                  <img
+                    src={imageError ? EducationImage : imageUrl}
+                    className={`img-fluid about-animated-image ${getAnimationClass()}`}
+                    alt="About Us Image"
+                    onError={handleImageError}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      transition: 'transform 0.8s cubic-bezier(.4,2,.6,1)',
+                    }}
+                  />
+                </div>
 
                 <div className="mission-vision mt-4" data-aos="fade-up" data-aos-delay="400">
                   {mission && (
