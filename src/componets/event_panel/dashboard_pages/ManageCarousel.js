@@ -23,7 +23,6 @@ const ManageCarousel = () => {
     id: null,
     title: "",
     sub_title: "",
-    description: "",
     image: null,
     imagePreview: null,
   });
@@ -135,7 +134,6 @@ const ManageCarousel = () => {
           id: itemData.id,
           title: itemData.title,
           sub_title: itemData.sub_title,
-          description: itemData.description,
           image: null, // We don't store the actual image file, just the URL
           imagePreview: itemData.image,
         });
@@ -215,7 +213,6 @@ const ManageCarousel = () => {
       id: null,
       title: "",
       sub_title: "",
-      description: "",
       image: null,
       imagePreview: null,
     });
@@ -234,7 +231,6 @@ const ManageCarousel = () => {
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title.trim());
       formDataToSend.append("sub_title", formData.sub_title.trim());
-      formDataToSend.append("description", formData.description.trim());
       
       if (formData.image) {
         formDataToSend.append("image", formData.image);
@@ -438,9 +434,7 @@ const ManageCarousel = () => {
           <Container fluid className="dashboard-body dashboard-main-container">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1 className="page-title mb-0">Manage Carousel</h1>
-              <Button variant="primary" onClick={addNewCarouselItem}>
-                <FaPlus /> Add New Item
-              </Button>
+             
             </div>
 
             {/* Alert for success/error messages */}
@@ -469,7 +463,7 @@ const ManageCarousel = () => {
                   <>
                     <Row className="mb-4">
                       <Col>
-                        <h2 className="mb-4">Select an Item to Edit</h2>
+                     
                         {carouselItems.length === 0 ? (
                           <Alert variant="info">
                             No carousel items found. Click "Add New Item" to create one.
@@ -499,11 +493,6 @@ const ManageCarousel = () => {
                                           <strong>Subtitle:</strong> {item.sub_title}
                                         </Card.Text>
                                       )}
-                                      <Card.Text className="text-muted mb-2">
-                                        {item.description && item.description.length > 100 
-                                          ? `${item.description.substring(0, 100)}...` 
-                                          : item.description}
-                                      </Card.Text>
                                       <Card.Text className="text-muted mb-3">
                                         <small>Created: {formatDate(item.created_at)}</small>
                                       </Card.Text>
@@ -569,20 +558,6 @@ const ManageCarousel = () => {
                               name="sub_title"
                               value={formData.sub_title}
                               onChange={handleChange}
-                              disabled={!isEditing}
-                            />
-                          </Form.Group>
-
-                          <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control
-                              as="textarea"
-                              rows={4}
-                              placeholder="Enter carousel item description"
-                              name="description"
-                              value={formData.description}
-                              onChange={handleChange}
-                              required
                               disabled={!isEditing}
                             />
                           </Form.Group>

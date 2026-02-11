@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Alert, Card, Modal, Spinner, Badge } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { FaEdit, FaArrowLeft, FaTrash, FaPlus, FaImage } from "react-icons/fa";
+import { FaEdit, FaArrowLeft, FaPlus, FaImage } from "react-icons/fa";
 
 import { useAuthFetch } from "../../../context/AuthFetch";
 import { useAuth } from "../../../context/AuthContext";
@@ -40,9 +40,7 @@ const ManageSeminarsConferences = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
 
-  // Delete confirmation modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+
 
   // Base URL for images
   const BASE_URL = "https://mahadevaaya.com";
@@ -404,66 +402,7 @@ const ManageSeminarsConferences = () => {
     }
   };
 
-  // Handle delete corporate event item
-  const handleDeleteItem = async () => {
-    if (!itemToDelete) return;
-     
-    setIsSubmitting(true);
-    try {
-      // Include the ID in the query parameters for the DELETE request
-      const formDataToSend = new FormData();
-      formDataToSend.append("id", itemToDelete.id);
-      
-      const response = await authFetch(
-        `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/seminar-event-service/`,
-        {
-          method: "DELETE",
-          body: formDataToSend,
-        }
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete corporate event item");
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setMessage("Corporate Event item deleted successfully!");
-        setVariant("success");
-        setShowAlert(true);
-        
-        // Refresh the corporate event items list
-        await fetchAllCorporateEventItems();
-        
-        // If we were viewing the deleted item, go back to the list
-        if (selectedItemId === itemToDelete.id) {
-          backToCorporateEventList();
-        }
-        
-        setTimeout(() => setShowAlert(false), 3000);
-      } else {
-        throw new Error(result.message || "Failed to delete corporate event item");
-      }
-    } catch (error) {
-      console.error("Error deleting corporate event item:", error);
-      setMessage(error.message || "An error occurred while deleting the corporate event item");
-      setVariant("danger");
-      setShowAlert(true);
-      setTimeout(() => setShowAlert(false), 5000);
-    } finally {
-      setIsSubmitting(false);
-      setShowDeleteModal(false);
-      setItemToDelete(null);
-    }
-  };
-
-  // Show delete confirmation modal
-  const showDeleteConfirmation = (item) => {
-    setItemToDelete(item);
-    setShowDeleteModal(true);
-  };
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -538,9 +477,7 @@ const ManageSeminarsConferences = () => {
           <Container fluid className="dashboard-body dashboard-main-container">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1 className="page-title mb-0">Seminars & Conferences</h1>
-              <Button variant="primary" onClick={addNewCorporateEventItem}>
-                <FaPlus /> Add New Item
-              </Button>
+             
             </div>
 
             {/* Alert for success/error messages */}
@@ -622,20 +559,13 @@ const ManageSeminarsConferences = () => {
                                         <small>Created: {formatDate(item.created_at)}</small>
                                       </Card.Text>
                                     </div>
-                                    <div className="d-flex justify-content-between mt-3">
+                                    <div className="mt-3">
                                       <Button 
                                         variant="outline-primary" 
                                         size="sm"
                                         onClick={() => handleItemClick(item.id)}
                                       >
                                         <FaEdit /> Edit
-                                      </Button>
-                                      <Button 
-                                        variant="outline-danger" 
-                                        size="sm"
-                                        onClick={() => showDeleteConfirmation(item)}
-                                      >
-                                        <FaTrash /> Delete
                                       </Button>
                                     </div>
                                   </Card.Body>
@@ -739,7 +669,7 @@ const ManageSeminarsConferences = () => {
                                       size="sm" 
                                       onClick={() => removeModule(index)}
                                     >
-                                      <FaTrash />
+                                   
                                     </Button>
                                   )}
                                 </Card.Header>
@@ -806,13 +736,7 @@ const ManageSeminarsConferences = () => {
                           >
                             <FaEdit /> Edit Item Details
                           </Button>
-                          <Button
-                            variant="outline-danger"
-                            onClick={() => showDeleteConfirmation(formData)}
-                            type="button"
-                          >
-                            <FaTrash /> Delete Item
-                          </Button>
+                        
                         </>
                       )}
                     </div>
@@ -824,27 +748,7 @@ const ManageSeminarsConferences = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the corporate event item "{itemToDelete?.title}"? This action cannot be undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleDeleteItem}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Deleting..." : "Delete"}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+
     </>
   );
 };

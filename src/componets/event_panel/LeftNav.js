@@ -127,11 +127,11 @@ const menuItems = [
       icon: <FaInfoCircle />,
       label: "AboutUs",
       submenu: [
-        {
-          label: "Add AboutUs",
-          path: "/AddAboutUs",
-          icon: <FaPlusSquare />,
-        },
+        // {
+        //   label: "Add AboutUs",
+        //   path: "/AddAboutUs",
+        //   icon: <FaPlusSquare />,
+        // },
         {
           label: "Manage AboutUs",
           path: "/ManageAboutUs",
@@ -170,51 +170,51 @@ const menuItems = [
       icon: <FaTools />,
       label: "Services",
       submenu: [
-        {
-          label: "Add Corporateevents",
-          path: "/AddCorporateevents",
-          icon: <FaIndustry />,
-        },
+        // {
+        //   label: "Add Corporateevents",
+        //   path: "/AddCorporateevents",
+        //   icon: <FaIndustry />,
+        // },
         {
           label: "Corporate Manage Services",
           path: "/ManageCorporateevents",
           icon: <FaListUl />,
         },
-        {
-          label: "Add Entertainment",
-          path: "/AddEntertainment",
-          icon: <FaMusic />,
-        },
+        // {
+        //   label: "Add Entertainment",
+        //   path: "/AddEntertainment",
+        //   icon: <FaMusic />,
+        // },
         {
           label: "Manage Entertainment",
           path: "/ManageEntertainment",
           icon: <FaListUl />,
         },
-        {
-          label: "Add Concert",
-          path: "/AddConcert",
-          icon: <FaMusic />,
-        },
+        // {
+        //   label: "Add Concert",
+        //   path: "/AddConcert",
+        //   icon: <FaMusic />,
+        // },
         {
           label: "Manage Concert",
           path: "/ManageConcert",
           icon: <FaListUl />,
         },
-        {
-          label: "Add Parties",
-          path: "/AddPrivateParties",
-          icon: <FaGlassCheers />,
-        },
+        // {
+        //   label: "Add Parties",
+        //   path: "/AddPrivateParties",
+        //   icon: <FaGlassCheers />,
+        // },
         {
           label: "Manage Parties",
           path: "/ManageParties",
           icon: <FaListUl />,
         },
-        {
-          label: "Add Seminars Conferences",
-          path: "/AddSeminarsConferences",
-          icon: <FaChalkboardTeacher />,
-        },
+        // {
+        //   label: "Add Seminars Conferences",
+        //   path: "/AddSeminarsConferences",
+        //   icon: <FaChalkboardTeacher />,
+        // },
         {
           label: "Manage Seminars Conferences",
           path: "/ManageSeminarsConferences",

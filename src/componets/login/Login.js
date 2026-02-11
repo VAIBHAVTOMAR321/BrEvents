@@ -184,7 +184,7 @@ const Login = () => {
                   
                   <Form.Group className="mb-3">
                     <Form.Label className="br-label form-label">
-                      Email or Mobile Number <span className="br-span-star">*</span>
+                      Email or Mobile Number <span className="star">*</span>
                     </Form.Label>
                     <Form.Control 
                       placeholder="Email or Phone" 
@@ -203,7 +203,7 @@ const Login = () => {
                   
                   <Form.Group className="mb-3">
                     <Form.Label className="br-label form-label">
-                      Password <span className="br-span-star">*</span>
+                      Password <span className="star">*</span>
                     </Form.Label>
                     <div className="password-wrapper" style={{ position: 'relative' }}>
                       <Form.Control 

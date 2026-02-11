@@ -1,7 +1,7 @@
 // src/components/HeroCarousel.js
 import React, { useState, useEffect } from 'react';
 import Carousel from 'react-bootstrap/Carousel';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Showcase from "../../assets/images/education/showcase-6.webp";
 import Slide2Image from "../../assets/images/education/activities-1.webp"; 
 import Slide3Image from "../../assets/images/education/events-1.webp";
@@ -196,7 +196,7 @@ function EventCarousel() {
   // Navigate to registration page
   const openRegistration = (e) => {
     e.preventDefault();
-    navigate('/registration');
+    navigate('/Registration');
   };
 
   // Handle image loading errors
@@ -272,7 +272,7 @@ function EventCarousel() {
                         ))}
                       </div>
                       <div className="action-buttons">
-                        <a href="/registration" className="btn-primary" onClick={openRegistration}>Registration</a>
+                        <Link to="/Registration" className="btn-primary" onClick={openRegistration}>Registration</Link>
                       </div>
                     </div>
                   </div>

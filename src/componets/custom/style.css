@@ -86,7 +86,9 @@ body {
 .testimonial-slider {
   position: relative;
 }
-
+.action-buttons{
+  margin-left: 200px;
+}
 /* This ensures the Swiper wrapper uses flexbox to align slides. */
 .testimonial-slider .swiper-wrapper {
   display: flex;

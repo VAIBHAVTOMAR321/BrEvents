@@ -217,7 +217,7 @@ const ForgotPassword = () => {
             {errorDisplay}
             <form onSubmit={handleSubmitEmail}>
               <div className="mb-3">
-                <label className="br-label form-label">Email Address <span className="br-span-star">*</span></label>
+                <label className="br-label form-label">Email Address <span className="star">*</span></label>
                 <input
                   type="email"
                   placeholder="Enter your email"
@@ -248,7 +248,7 @@ const ForgotPassword = () => {
             {errorDisplay}
             <form onSubmit={handleVerifyOtp}>
               <div className="mb-3">
-                <label className="br-label form-label">Verification Code <span className="br-span-star">*</span></label>
+                <label className="br-label form-label">Verification Code <span className="star">*</span></label>
                 <input
                   type="text"
                   placeholder="Enter 6-digit code"
@@ -293,7 +293,7 @@ const ForgotPassword = () => {
             {errorDisplay}
             <form onSubmit={handleResetPassword}>
               <div className="mb-3">
-                <label className="br-label form-label">New Password <span className="br-span-star">*</span></label>
+                <label className="br-label form-label">New Password <span className="star">*</span></label>
                 <div className="password-wrapper" style={{ position: 'relative' }}>
                   <input
                     placeholder="Enter new password"
@@ -311,7 +311,7 @@ const ForgotPassword = () => {
                 </div>
               </div>
               <div className="mb-3">
-                <label className="br-label form-label">Confirm New Password <span className="br-span-star">*</span></label>
+                <label className="br-label form-label">Confirm New Password <span className="star">*</span></label>
                 <div className="password-wrapper" style={{ position: 'relative' }}>
                   <input
                     placeholder="Confirm new password"

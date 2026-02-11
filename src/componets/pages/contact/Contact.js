@@ -248,7 +248,7 @@ function Contact() {
                     value={formData.full_name}
                     onChange={handleChange}
                     isInvalid={!!errors.full_name}
-                    placeholder="John Doe"
+                    placeholder="name"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.full_name}
@@ -263,7 +263,7 @@ function Contact() {
                     value={formData.email}
                     onChange={handleChange}
                     isInvalid={!!errors.email}
-                    placeholder="john@example.com"
+                    placeholder="email"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.email}

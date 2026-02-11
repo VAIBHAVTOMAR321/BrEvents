@@ -528,9 +528,7 @@ const ManageAboutUs = () => {
           <Container fluid className="dashboard-body dashboard-main-container">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1 className="page-title mb-0">Manage About Us</h1>
-              <Button variant="primary" onClick={addNewAboutUsItem}>
-                <FaPlus /> Add New Item
-              </Button>
+            
             </div>
 
             {/* Alert for success/error messages */}

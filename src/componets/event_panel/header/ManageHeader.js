@@ -540,7 +540,7 @@ const ManageHeader = () => {
                   <>
                     <Row className="mb-4">
                       <Col>
-                        <h2 className="mb-4">Select a Company to Edit</h2>
+                 
                         {companyDetails.length === 0 ? (
                           <Alert variant="info">
                             No company details found.
