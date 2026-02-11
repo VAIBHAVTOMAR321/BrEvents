@@ -457,7 +457,7 @@ function Events() {
 
         {/* Simplified Registration Modal */}
         <Modal show={showSimplifiedRegistration} onHide={() => setShowSimplifiedRegistration(false)} centered size="lg">
-  <Modal.Header closeButton>
+  <Modal.Header style={{backgroundColor: '#0b5ed7', color: 'white'}} closeButton>
     <Modal.Title>Event Registration</Modal.Title>
   </Modal.Header>
   <Modal.Body>
@@ -559,9 +559,9 @@ function Events() {
         >
           <option value="audience">Audience</option>
           <option value="participant">Participant</option>
-          <option value="volunteer">Volunteer</option>
+          {/* <option value="volunteer">Volunteer</option>
           <option value="speaker">Speaker</option>
-          <option value="organizer">Organizer</option>
+          <option value="organizer">Organizer</option> */}
         </Form.Select>
       </Form.Group>
       
