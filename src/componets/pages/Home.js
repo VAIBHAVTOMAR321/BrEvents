@@ -1,12 +1,9 @@
 import React from 'react'
 import Carousel from './EventCarousel'
 import AboutUs from './AboutUs'
-import FeaturedPrograms from './FeaturedPrograms'
 import Events from './Events'
-import Students from './Students'
-import Testimonials from './Testimonials'
-import QualityEducation from './QualityEducation'
-import RecentNews from './RecentNews'
+
+
 import WhyChoice from './WhyChoice'
 
 

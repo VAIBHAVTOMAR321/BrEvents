@@ -1,35 +1,50 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Form, Button, Alert, Dropdown, Row, Col, Image, ProgressBar, Card } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import '../../assets/css/registration.css';
-import RegistrationPreview from './RegistrationPreview';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Form,
+  Button,
+  Alert,
+  Dropdown,
+  Row,
+  Col,
+  Image,
+  ProgressBar,
+  Card,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import "../../assets/css/registration.css";
+import RegistrationPreview from "./RegistrationPreview";
 
-const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = false, pendingEventId = null }) => {
+const Registration = ({
+  email: propEmail,
+  onRegistrationSuccess,
+  fromEvent = false,
+  pendingEventId = null,
+}) => {
   const navigate = useNavigate();
-  
+
   // Form state - Kept in React state for secure handling (not stored in localStorage)
   // This data persists throughout the user's session during registration flow
   const [formData, setFormData] = useState({
-    user_type: 'individual', // Default to individual
-    team_name: '', 
+    user_type: "individual", // Default to individual
+    team_name: "",
     profile_image: null,
-    profile_image_preview: '',
-    full_name: '',
-    gender: '',
-    email: propEmail || '', // Auto-fill with prop email if provided
-    password: '',
-    confirmPassword: '',
-    date_of_birth: '',
-    country: '',
-    state: '',
-    city: '',
-    phone: '',
-    address: '',
-    introduction: '',
+    profile_image_preview: "",
+    full_name: "",
+    gender: "",
+    email: propEmail || "", // Auto-fill with prop email if provided
+    password: "",
+    confirmPassword: "",
+    date_of_birth: "",
+    country: "",
+    state: "",
+    city: "",
+    phone: "",
+    address: "",
+    introduction: "",
     talent_scope: [],
-    social_media_links: [''],
-    additional_links: [''],
-    portfolio_links: [''],
+    social_media_links: [""],
+    additional_links: [""],
+    portfolio_links: [""],
     // Certificate fields
     selected_certificates: [], // To track which certificates are selected
     national_level_certificate: null,
@@ -38,33 +53,34 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     district_level_certificate: null,
     college_level_certificate: null,
     other_certificate: null,
-    agreeTerms: false
+    agreeTerms: false,
   });
 
   // Verification form state
-  const [verificationCode, setVerificationCode] = useState('');
-  const [registeredEmail, setRegisteredEmail] = useState('');
-  const [userId, setUserId] = useState(''); // Store user_id fetched from API
-  
+  const [verificationCode, setVerificationCode] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [userId, setUserId] = useState(""); // Store user_id fetched from API
+
   // UI state
-  const [currentStep, setCurrentStep] = useState('registration'); // 'registration', 'preview', or 'verification'
-  
+  const [currentStep, setCurrentStep] = useState("registration"); // 'registration', 'preview', or 'verification'
+
   // Validation state
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [apiError, setApiError] = useState('');
+  const [apiError, setApiError] = useState("");
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [apiResponse, setApiResponse] = useState(null); // To store detailed API response for debugging
   const [countdown, setCountdown] = useState(0); // For resend code countdown
-  const [alreadyRegisteredMessage, setAlreadyRegisteredMessage] = useState(''); // New state for already registered message
-  const [phoneAlreadyRegisteredMessage, setPhoneAlreadyRegisteredMessage] = useState(''); // New state for phone already registered message
-  const [userTypeError, setUserTypeError] = useState(''); // New state for user type error
+  const [alreadyRegisteredMessage, setAlreadyRegisteredMessage] = useState(""); // New state for already registered message
+  const [phoneAlreadyRegisteredMessage, setPhoneAlreadyRegisteredMessage] =
+    useState(""); // New state for phone already registered message
+  const [userTypeError, setUserTypeError] = useState(""); // New state for user type error
   const [certificateUrls, setCertificateUrls] = useState({}); // Secure storage of certificate URLs in React state (not localStorage)
   const [emailNotVerified, setEmailNotVerified] = useState(false); // New state for unverified email
   const [checkingEmail, setCheckingEmail] = useState(false); // New state for email checking status
-  
+
   // Ref for file inputs
   const fileInputRef = useRef(null);
   const certificateFileRefs = {
@@ -73,26 +89,29 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     state_level_certificate: useRef(null),
     district_level_certificate: useRef(null),
     college_level_certificate: useRef(null),
-    other_certificate: useRef(null)
+    other_certificate: useRef(null),
   };
 
   // Certificate options
   const certificateOptions = [
-    { id: 'national_level_certificate', label: 'National Level Certificate' },
-    { id: 'internation_level_certificate_award', label: 'International Level Certificate/Award' },
-    { id: 'state_level_certificate', label: 'State Level Certificate' },
-    { id: 'district_level_certificate', label: 'District Level Certificate' },
-    { id: 'college_level_certificate', label: 'College Level Certificate' },
-    { id: 'other_certificate', label: 'Other Certificate' }
+    { id: "national_level_certificate", label: "National Level Certificate" },
+    {
+      id: "internation_level_certificate_award",
+      label: "International Level Certificate/Award",
+    },
+    { id: "state_level_certificate", label: "State Level Certificate" },
+    { id: "district_level_certificate", label: "District Level Certificate" },
+    { id: "college_level_certificate", label: "College Level Certificate" },
+    { id: "other_certificate", label: "Other Certificate" },
   ];
 
   // Talent scope options
   const talentOptions = [
-    'Dancing',
-    'Acting',
-    'Singing',
-    'Music',
-    'script Writing',
+    "Dancing",
+    "Acting",
+    "Singing",
+    "Music",
+    "script Writing",
   ];
 
   // Form validation for registration with scroll to first error
@@ -100,37 +119,40 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     const newErrors = {};
 
     // Team name validation (only for team)
-    if (formData.user_type === 'team' && !formData.team_name.trim()) {
-      newErrors.team_name = 'Team name is required for team registration';
+    if (formData.user_type === "team" && !formData.team_name.trim()) {
+      newErrors.team_name = "Team name is required for team registration";
     }
 
     // Full name validation
     if (!formData.full_name.trim()) {
-      newErrors.full_name = 'Full name is required';
+      newErrors.full_name = "Full name is required";
     } else if (!/^[a-zA-Z\s]+$/.test(formData.full_name)) {
-      newErrors.full_name = 'Full name should only contain letters and spaces';
+      newErrors.full_name = "Full name should only contain letters and spaces";
     }
 
     // Gender validation
     if (!formData.gender) {
-      newErrors.gender = 'Please select your gender';
+      newErrors.gender = "Please select your gender";
     }
 
     // Date of birth validation - no future dates (only for individual)
-    if (formData.user_type === 'individual') {
+    if (formData.user_type === "individual") {
       if (!formData.date_of_birth) {
-        newErrors.date_of_birth = 'Date of birth is required';
+        newErrors.date_of_birth = "Date of birth is required";
       } else {
         const dob = new Date(formData.date_of_birth);
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Set time to beginning of day for accurate comparison
-        
+
         if (dob > today) {
-          newErrors.date_of_birth = 'Date of birth cannot be in the future';
+          newErrors.date_of_birth = "Date of birth cannot be in the future";
         } else {
-          const age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+          const age = Math.floor(
+            (today - dob) / (365.25 * 24 * 60 * 60 * 1000),
+          );
           if (age < 13) {
-            newErrors.date_of_birth = 'You must be at least 13 years old to register';
+            newErrors.date_of_birth =
+              "You must be at least 13 years old to register";
           }
         }
       }
@@ -138,68 +160,78 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
 
     // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+      newErrors.password = "Password must be at least 8 characters long";
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+      newErrors.password =
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number";
     }
 
     // Confirm password validation
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     // Country validation
     if (!formData.country.trim()) {
-      newErrors.country = 'Country is required';
+      newErrors.country = "Country is required";
     }
 
     // State validation
     if (!formData.state.trim()) {
-      newErrors.state = 'State is required';
+      newErrors.state = "State is required";
     }
 
     // City validation
     if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
+      newErrors.city = "City is required";
     }
 
     // Phone validation - exactly 10 digits
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = "Phone number is required";
     } else if (!/^[0-9]{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number must be exactly 10 digits';
+      newErrors.phone = "Phone number must be exactly 10 digits";
     }
 
     // Address validation
     if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
+      newErrors.address = "Address is required";
     }
 
     // Talent scope validation
     if (formData.talent_scope.length === 0) {
-      newErrors.talent_scope = 'Please select at least one talent scope';
+      newErrors.talent_scope = "Please select at least one talent scope";
     }
 
     // Social media links validation
-    const validSocialMediaLinks = formData.social_media_links.filter(link => link.trim() !== '');
+    const validSocialMediaLinks = formData.social_media_links.filter(
+      (link) => link.trim() !== "",
+    );
     if (validSocialMediaLinks.length === 0) {
-      newErrors.social_media_links = 'Please add at least one social media link';
+      newErrors.social_media_links =
+        "Please add at least one social media link";
     } else {
       const linkErrors = [];
       validSocialMediaLinks.forEach((link, index) => {
-        if (!/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(link)) {
-          linkErrors[index] = 'Please enter a valid URL';
+        if (
+          !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(
+            link,
+          )
+        ) {
+          linkErrors[index] = "Please enter a valid URL";
         }
       });
       if (linkErrors.length > 0) {
@@ -208,12 +240,18 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     }
 
     // Additional links validation
-    const validAdditionalLinks = formData.additional_links.filter(link => link.trim() !== '');
+    const validAdditionalLinks = formData.additional_links.filter(
+      (link) => link.trim() !== "",
+    );
     if (validAdditionalLinks.length > 0) {
       const linkErrors = [];
       validAdditionalLinks.forEach((link, index) => {
-        if (!/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(link)) {
-          linkErrors[index] = 'Please enter a valid URL';
+        if (
+          !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(
+            link,
+          )
+        ) {
+          linkErrors[index] = "Please enter a valid URL";
         }
       });
       if (linkErrors.length > 0) {
@@ -222,12 +260,18 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     }
 
     // Portfolio links validation
-    const validPortfolioLinks = formData.portfolio_links.filter(link => link.trim() !== '');
+    const validPortfolioLinks = formData.portfolio_links.filter(
+      (link) => link.trim() !== "",
+    );
     if (validPortfolioLinks.length > 0) {
       const linkErrors = [];
       validPortfolioLinks.forEach((link, index) => {
-        if (!/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(link)) {
-          linkErrors[index] = 'Please enter a valid URL';
+        if (
+          !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(
+            link,
+          )
+        ) {
+          linkErrors[index] = "Please enter a valid URL";
         }
       });
       if (linkErrors.length > 0) {
@@ -237,279 +281,290 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
 
     // Introduction validation
     if (!formData.introduction.trim()) {
-      newErrors.introduction = 'Please introduce yourself';
+      newErrors.introduction = "Please introduce yourself";
     } else if (formData.introduction.length < 50) {
-      newErrors.introduction = 'Introduction must be at least 50 characters long';
+      newErrors.introduction =
+        "Introduction must be at least 50 characters long";
     } else if (formData.introduction.length > 500) {
-      newErrors.introduction = 'Introduction must be less than 500 characters';
+      newErrors.introduction = "Introduction must be less than 500 characters";
     }
 
     // Terms agreement validation
     if (!formData.agreeTerms) {
-      newErrors.agreeTerms = 'You must agree to the terms and conditions';
+      newErrors.agreeTerms = "You must agree to the terms and conditions";
     }
 
     setErrors(newErrors);
-    
+
     // Scroll to the first error field
     if (Object.keys(newErrors).length > 0) {
-      const firstErrorField = document.querySelector('[name="' + Object.keys(newErrors)[0] + '"]');
+      const firstErrorField = document.querySelector(
+        '[name="' + Object.keys(newErrors)[0] + '"]',
+      );
       if (firstErrorField) {
-        firstErrorField.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
+        firstErrorField.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
         });
         firstErrorField.focus();
       }
     }
-    
+
     return Object.keys(newErrors).length === 0;
   };
 
   // Verification form validation
   const validateVerificationForm = () => {
     const newErrors = {};
-    
+
     if (!verificationCode.trim()) {
-      newErrors.verificationCode = 'Verification code is required';
+      newErrors.verificationCode = "Verification code is required";
     } else if (!/^[0-9]{6}$/.test(verificationCode)) {
-      newErrors.verificationCode = 'Verification code must be 6 digits';
+      newErrors.verificationCode = "Verification code must be 6 digits";
     }
-    
+
     setErrors(newErrors);
-    
+
     // Scroll to the first error field
     if (Object.keys(newErrors).length > 0) {
-      const firstErrorField = document.querySelector('[name="' + Object.keys(newErrors)[0] + '"]');
+      const firstErrorField = document.querySelector(
+        '[name="' + Object.keys(newErrors)[0] + '"]',
+      );
       if (firstErrorField) {
-        firstErrorField.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
+        firstErrorField.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
         });
         firstErrorField.focus();
       }
     }
-    
+
     return Object.keys(newErrors).length === 0;
   };
 
   // Live validation for individual fields
   const validateField = (name, value) => {
-    let error = '';
-    
+    let error = "";
+
     switch (name) {
-      case 'team_name':
-        if (formData.user_type === 'team' && !value.trim()) {
-          error = 'Team name is required for team registration';
+      case "team_name":
+        if (formData.user_type === "team" && !value.trim()) {
+          error = "Team name is required for team registration";
         }
         break;
-        
-      case 'full_name':
+
+      case "full_name":
         if (!value.trim()) {
-          error = 'Full name is required';
+          error = "Full name is required";
         } else if (!/^[a-zA-Z\s]+$/.test(value)) {
-          error = 'Full name should only contain letters and spaces';
+          error = "Full name should only contain letters and spaces";
         }
         break;
-        
-      case 'gender':
+
+      case "gender":
         if (!value) {
-          error = 'Please select your gender';
+          error = "Please select your gender";
         }
         break;
-        
-      case 'date_of_birth':
-        if (formData.user_type === 'individual') {
+
+      case "date_of_birth":
+        if (formData.user_type === "individual") {
           if (!value) {
-            error = 'Date of birth is required';
+            error = "Date of birth is required";
           } else {
             const dob = new Date(value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (dob > today) {
-              error = 'Date of birth cannot be in the future';
+              error = "Date of birth cannot be in the future";
             } else {
-              const age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+              const age = Math.floor(
+                (today - dob) / (365.25 * 24 * 60 * 60 * 1000),
+              );
               if (age < 13) {
-                error = 'You must be at least 13 years old to register';
+                error = "You must be at least 13 years old to register";
               }
             }
           }
         }
         break;
-        
-      case 'email':
+
+      case "email":
         if (!value.trim()) {
-          error = 'Email is required';
+          error = "Email is required";
         } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
-          error = 'Please enter a valid email address';
+          error = "Please enter a valid email address";
         }
         break;
-        
-      case 'password':
+
+      case "password":
         if (!value) {
-          error = 'Password is required';
+          error = "Password is required";
         } else if (value.length < 8) {
-          error = 'Password must be at least 8 characters long';
+          error = "Password must be at least 8 characters long";
         } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-          error = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+          error =
+            "Password must contain at least one uppercase letter, one lowercase letter, and one number";
         }
         break;
-        
-      case 'confirmPassword':
+
+      case "confirmPassword":
         if (!value) {
-          error = 'Please confirm your password';
+          error = "Please confirm your password";
         } else if (value !== formData.password) {
-          error = 'Passwords do not match';
+          error = "Passwords do not match";
         }
         break;
-        
-      case 'country':
+
+      case "country":
         if (!value.trim()) {
-          error = 'Country is required';
+          error = "Country is required";
         }
         break;
-        
-      case 'state':
+
+      case "state":
         if (!value.trim()) {
-          error = 'State is required';
+          error = "State is required";
         }
         break;
-        
-      case 'city':
+
+      case "city":
         if (!value.trim()) {
-          error = 'City is required';
+          error = "City is required";
         }
         break;
-        
-      case 'phone':
+
+      case "phone":
         if (!value.trim()) {
-          error = 'Phone number is required';
+          error = "Phone number is required";
         } else if (!/^[0-9]{10}$/.test(value)) {
-          error = 'Phone number must be exactly 10 digits';
+          error = "Phone number must be exactly 10 digits";
         }
         break;
-        
-      case 'address':
+
+      case "address":
         if (!value.trim()) {
-          error = 'Address is required';
+          error = "Address is required";
         }
         break;
-        
-      case 'introduction':
+
+      case "introduction":
         if (!value.trim()) {
-          error = 'Please introduce yourself';
+          error = "Please introduce yourself";
         } else if (value.length < 50) {
-          error = 'Introduction must be at least 50 characters long';
+          error = "Introduction must be at least 50 characters long";
         } else if (value.length > 500) {
-          error = 'Introduction must be less than 500 characters';
+          error = "Introduction must be less than 500 characters";
         }
         break;
-        
-      case 'agreeTerms':
+
+      case "agreeTerms":
         if (!value) {
-          error = 'You must agree to the terms and conditions';
+          error = "You must agree to the terms and conditions";
         }
         break;
-        
+
       default:
         break;
     }
-    
+
     return error;
   };
 
   // Handle input change for registration form with live validation
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     // Special handling for different fields
     let processedValue = value;
-    
-    if (name === 'phone') {
+
+    if (name === "phone") {
       // Only allow digits for phone, max 10
-      processedValue = value.replace(/[^0-9]/g, '').slice(0, 10);
-    } else if (name === 'full_name') {
+      processedValue = value.replace(/[^0-9]/g, "").slice(0, 10);
+    } else if (name === "full_name") {
       // Only allow letters and spaces for name
-      processedValue = value.replace(/[^a-zA-Z\s]/g, '');
+      processedValue = value.replace(/[^a-zA-Z\s]/g, "");
     }
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : processedValue
+      [name]: type === "checkbox" ? checked : processedValue,
     }));
 
     // Perform live validation for the changed field
-    const fieldError = validateField(name, type === 'checkbox' ? checked : processedValue);
-    setErrors(prev => ({
+    const fieldError = validateField(
+      name,
+      type === "checkbox" ? checked : processedValue,
+    );
+    setErrors((prev) => ({
       ...prev,
-      [name]: fieldError
+      [name]: fieldError,
     }));
-    
+
     // Clear phone already registered message when phone is changed
-    if (name === 'phone' && phoneAlreadyRegisteredMessage) {
-      setPhoneAlreadyRegisteredMessage('');
+    if (name === "phone" && phoneAlreadyRegisteredMessage) {
+      setPhoneAlreadyRegisteredMessage("");
     }
-    
+
     // Clear user type error when user type is changed
-    if (name === 'user_type' && userTypeError) {
-      setUserTypeError('');
+    if (name === "user_type" && userTypeError) {
+      setUserTypeError("");
     }
-    
+
     // Check email status when email changes
-    if (name === 'email') {
+    if (name === "email") {
       // Clear previous messages
-      setAlreadyRegisteredMessage('');
+      setAlreadyRegisteredMessage("");
       setEmailNotVerified(false);
     }
   };
 
   // Handle user type change with validation
   const handleUserTypeChange = (userType) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       user_type: userType,
       // Reset form fields that are specific to each user type
-      team_name: userType === 'team' ? prev.team_name : '',
-      date_of_birth: userType === 'individual' ? prev.date_of_birth : ''
+      team_name: userType === "team" ? prev.team_name : "",
+      date_of_birth: userType === "individual" ? prev.date_of_birth : "",
     }));
 
     // Validate fields based on new user type
     const newErrors = {};
-    if (userType === 'team') {
-      const teamNameError = validateField('team_name', formData.team_name);
+    if (userType === "team") {
+      const teamNameError = validateField("team_name", formData.team_name);
       if (teamNameError) {
         newErrors.team_name = teamNameError;
       }
-      newErrors.date_of_birth = ''; // Clear DOB error for team
+      newErrors.date_of_birth = ""; // Clear DOB error for team
     } else {
-      const dobError = validateField('date_of_birth', formData.date_of_birth);
+      const dobError = validateField("date_of_birth", formData.date_of_birth);
       if (dobError) {
         newErrors.date_of_birth = dobError;
       }
-      newErrors.team_name = ''; // Clear team name error for individual
+      newErrors.team_name = ""; // Clear team name error for individual
     }
-    
-    setErrors(prev => ({
+
+    setErrors((prev) => ({
       ...prev,
-      ...newErrors
+      ...newErrors,
     }));
-    
+
     // Clear user type error
-    setUserTypeError('');
+    setUserTypeError("");
   };
 
   // Handle verification code change
   const handleVerificationCodeChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    const value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
     setVerificationCode(value);
-    
+
     // Clear error if it exists
     if (errors.verificationCode) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        verificationCode: ''
+        verificationCode: "",
       }));
     }
   };
@@ -517,44 +572,45 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   // Handle profile image change
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
-    
+
     if (file) {
       // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
       if (!validTypes.includes(file.type)) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          profile_image: 'Please upload a valid image file (JPEG, JPG, PNG, or GIF)'
+          profile_image:
+            "Please upload a valid image file (JPEG, JPG, PNG, or GIF)",
         }));
         return;
       }
-      
+
       // Validate file size (max 1MB)
       const maxSize = 1 * 1024 * 1024; // 1MB in bytes
       if (file.size > maxSize) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          profile_image: 'Image size should be less than 1MB'
+          profile_image: "Image size should be less than 1MB",
         }));
         return;
       }
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           profile_image: file,
-          profile_image_preview: reader.result
+          profile_image_preview: reader.result,
         }));
       };
       reader.readAsDataURL(file);
-      
+
       // Clear error if it exists
       if (errors.profile_image) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          profile_image: ''
+          profile_image: "",
         }));
       }
     }
@@ -562,63 +618,69 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
 
   // Remove profile image
   const removeProfileImage = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       profile_image: null,
-      profile_image_preview: ''
+      profile_image_preview: "",
     }));
-    
+
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   // Handle certificate file change
   const handleCertificateFileChange = (certificateType, e) => {
     const file = e.target.files[0];
-    
+
     if (file) {
       // Validate file type
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+      const validTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "application/pdf",
+      ];
       if (!validTypes.includes(file.type)) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [certificateType]: 'Please upload a valid file (JPEG, JPG, PNG, or PDF)'
+          [certificateType]:
+            "Please upload a valid file (JPEG, JPG, PNG, or PDF)",
         }));
         return;
       }
-      
+
       // Validate file size (max 2MB)
       const maxSize = 2 * 1024 * 1024; // 2MB in bytes
       if (file.size > maxSize) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [certificateType]: 'File size should be less than 2MB'
+          [certificateType]: "File size should be less than 2MB",
         }));
         return;
       }
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        [certificateType]: file
+        [certificateType]: file,
       }));
-      
+
       // Create URL for the certificate file
       const reader = new FileReader();
       reader.onloadend = () => {
-        setCertificateUrls(prev => ({
+        setCertificateUrls((prev) => ({
           ...prev,
-          [certificateType]: reader.result
+          [certificateType]: reader.result,
         }));
       };
       reader.readAsDataURL(file);
-      
+
       // Clear error if it exists
       if (errors[certificateType]) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [certificateType]: ''
+          [certificateType]: "",
         }));
       }
     }
@@ -626,69 +688,73 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
 
   // Remove certificate file
   const removeCertificateFile = (certificateType) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [certificateType]: null
+      [certificateType]: null,
     }));
-    
-    setCertificateUrls(prev => {
+
+    setCertificateUrls((prev) => {
       const newUrls = { ...prev };
       delete newUrls[certificateType];
       return newUrls;
     });
-    
+
     // Reset file input
     if (certificateFileRefs[certificateType].current) {
-      certificateFileRefs[certificateType].current.value = '';
+      certificateFileRefs[certificateType].current.value = "";
     }
   };
 
   // Handle certificate selection
   const handleCertificateSelection = (certificateId) => {
-    setFormData(prev => {
-      const newSelectedCertificates = prev.selected_certificates.includes(certificateId)
-        ? prev.selected_certificates.filter(id => id !== certificateId)
+    setFormData((prev) => {
+      const newSelectedCertificates = prev.selected_certificates.includes(
+        certificateId,
+      )
+        ? prev.selected_certificates.filter((id) => id !== certificateId)
         : [...prev.selected_certificates, certificateId];
-      
+
       // If certificate is being deselected, remove the file
       if (!newSelectedCertificates.includes(certificateId)) {
-        return { 
-          ...prev, 
+        return {
+          ...prev,
           selected_certificates: newSelectedCertificates,
-          [certificateId]: null
+          [certificateId]: null,
         };
       }
-      
+
       return { ...prev, selected_certificates: newSelectedCertificates };
     });
 
     // Clear error if it exists
     if (errors[certificateId]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [certificateId]: ''
+        [certificateId]: "",
       }));
     }
   };
 
   // Handle talent scope selection with validation
   const handleTalentScopeChange = (talent) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newTalentScope = prev.talent_scope.includes(talent)
-        ? prev.talent_scope.filter(t => t !== talent)
+        ? prev.talent_scope.filter((t) => t !== talent)
         : [...prev.talent_scope, talent];
-      
+
       return { ...prev, talent_scope: newTalentScope };
     });
-    
+
     // Validate talent scope
-    const talentError = formData.talent_scope.includes(talent) && formData.talent_scope.length === 1 
-      ? 'Please select at least one talent scope' 
-      : '';
-    
-    setErrors(prev => ({
+    const talentError =
+      formData.talent_scope.includes(talent) &&
+      formData.talent_scope.length === 1
+        ? "Please select at least one talent scope"
+        : "";
+
+    setErrors((prev) => ({
       ...prev,
-      talent_scope: talentError
+      talent_scope: talentError,
     }));
   };
 
@@ -696,35 +762,38 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   const handleSocialMediaLinkChange = (index, value) => {
     const newLinks = [...formData.social_media_links];
     newLinks[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      social_media_links: newLinks
+      social_media_links: newLinks,
     }));
-    
+
     // Validate social media links
-    const validLinks = newLinks.filter(link => link.trim() !== '');
-    let linkError = '';
+    const validLinks = newLinks.filter((link) => link.trim() !== "");
+    let linkError = "";
     if (validLinks.length === 0) {
-      linkError = 'Please add at least one social media link';
+      linkError = "Please add at least one social media link";
     } else {
-      const invalidLinks = validLinks.some(link => 
-        !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(link)
+      const invalidLinks = validLinks.some(
+        (link) =>
+          !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(
+            link,
+          ),
       );
       if (invalidLinks) {
-        linkError = 'Please enter valid URLs';
+        linkError = "Please enter valid URLs";
       }
     }
-    
-    setErrors(prev => ({
+
+    setErrors((prev) => ({
       ...prev,
-      social_media_links: linkError
+      social_media_links: linkError,
     }));
   };
 
   const addSocialMediaLink = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      social_media_links: [...prev.social_media_links, '']
+      social_media_links: [...prev.social_media_links, ""],
     }));
   };
 
@@ -732,7 +801,10 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     if (formData.social_media_links.length > 1) {
       const newSocialMediaLinks = [...formData.social_media_links];
       newSocialMediaLinks.splice(index, 1);
-      setFormData(prev => ({ ...prev, social_media_links: newSocialMediaLinks }));
+      setFormData((prev) => ({
+        ...prev,
+        social_media_links: newSocialMediaLinks,
+      }));
     }
   };
 
@@ -740,31 +812,38 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   const handleAdditionalLinkChange = (index, value) => {
     const newAdditionalLinks = [...formData.additional_links];
     newAdditionalLinks[index] = value;
-    setFormData(prev => ({ ...prev, additional_links: newAdditionalLinks }));
+    setFormData((prev) => ({ ...prev, additional_links: newAdditionalLinks }));
 
     // Clear error for this specific link if it exists
-    if (errors.additional_links && Array.isArray(errors.additional_links) && errors.additional_links[index]) {
-      setErrors(prev => {
+    if (
+      errors.additional_links &&
+      Array.isArray(errors.additional_links) &&
+      errors.additional_links[index]
+    ) {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         if (Array.isArray(newErrors.additional_links)) {
           newErrors.additional_links = [...newErrors.additional_links];
-          newErrors.additional_links[index] = '';
+          newErrors.additional_links[index] = "";
         }
         return newErrors;
       });
-    } else if (errors.additional_links && typeof errors.additional_links === 'string') {
+    } else if (
+      errors.additional_links &&
+      typeof errors.additional_links === "string"
+    ) {
       // Clear the general additional_links error if it's a string
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        additional_links: ''
+        additional_links: "",
       }));
     }
   };
 
   const addAdditionalLink = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      additional_links: [...prev.additional_links, '']
+      additional_links: [...prev.additional_links, ""],
     }));
   };
 
@@ -772,7 +851,10 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     if (formData.additional_links.length > 1) {
       const newAdditionalLinks = [...formData.additional_links];
       newAdditionalLinks.splice(index, 1);
-      setFormData(prev => ({ ...prev, additional_links: newAdditionalLinks }));
+      setFormData((prev) => ({
+        ...prev,
+        additional_links: newAdditionalLinks,
+      }));
     }
   };
 
@@ -780,33 +862,36 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   const handlePortfolioLinkChange = (index, value) => {
     const newLinks = [...formData.portfolio_links];
     newLinks[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      portfolio_links: newLinks
+      portfolio_links: newLinks,
     }));
-    
+
     // Validate portfolio links
-    const validLinks = newLinks.filter(link => link.trim() !== '');
-    let linkError = '';
+    const validLinks = newLinks.filter((link) => link.trim() !== "");
+    let linkError = "";
     if (validLinks.length > 0) {
-      const invalidLinks = validLinks.some(link => 
-        !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(link)
+      const invalidLinks = validLinks.some(
+        (link) =>
+          !/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/.test(
+            link,
+          ),
       );
       if (invalidLinks) {
-        linkError = 'Please enter valid URLs';
+        linkError = "Please enter valid URLs";
       }
     }
-    
-    setErrors(prev => ({
+
+    setErrors((prev) => ({
       ...prev,
-      portfolio_links: linkError
+      portfolio_links: linkError,
     }));
   };
 
   const addPortfolioLink = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      portfolio_links: [...prev.portfolio_links, '']
+      portfolio_links: [...prev.portfolio_links, ""],
     }));
   };
 
@@ -814,14 +899,14 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     if (formData.portfolio_links.length > 1) {
       const newPortfolioLinks = [...formData.portfolio_links];
       newPortfolioLinks.splice(index, 1);
-      setFormData(prev => ({ ...prev, portfolio_links: newPortfolioLinks }));
+      setFormData((prev) => ({ ...prev, portfolio_links: newPortfolioLinks }));
     }
   };
 
   // Handle preview button click - validate form and submit
   const handlePreviewClick = async (e) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       await handleRegistrationSubmit(e);
     }
@@ -830,13 +915,13 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   // Handle direct verification for already registered but unverified email
   const handleDirectVerification = () => {
     setRegisteredEmail(formData.email);
-    setCurrentStep('verification');
+    setCurrentStep("verification");
   };
 
   // Open certificate in new tab
   const openCertificateInNewTab = (certificateId) => {
     if (certificateUrls[certificateId]) {
-      window.open(certificateUrls[certificateId], '_blank');
+      window.open(certificateUrls[certificateId], "_blank");
     }
   };
 
@@ -844,43 +929,43 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   const handleRegistrationComplete = async () => {
     // Reset all state
     setErrors({});
-    setApiError('');
+    setApiError("");
     setSubmitSuccess(false);
     setVerificationSuccess(false);
-    setCurrentStep('registration');
-    setVerificationCode('');
-    setRegisteredEmail('');
+    setCurrentStep("registration");
+    setVerificationCode("");
+    setRegisteredEmail("");
     setResendSuccess(false);
     setApiResponse(null);
     setCountdown(0);
-    setAlreadyRegisteredMessage('');
-    setPhoneAlreadyRegisteredMessage('');
-    setUserTypeError('');
+    setAlreadyRegisteredMessage("");
+    setPhoneAlreadyRegisteredMessage("");
+    setUserTypeError("");
     setCertificateUrls({});
     setEmailNotVerified(false);
     setCheckingEmail(false);
-    setUserId('');
+    setUserId("");
     setFormData({
-      user_type: 'individual',
-      team_name: '',
+      user_type: "individual",
+      team_name: "",
       profile_image: null,
-      profile_image_preview: '',
-      full_name: '',
-      gender: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      date_of_birth: '',
-      country: '',
-      state: '',
-      city: '',
-      phone: '',
-      address: '',
-      introduction: '',
+      profile_image_preview: "",
+      full_name: "",
+      gender: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      date_of_birth: "",
+      country: "",
+      state: "",
+      city: "",
+      phone: "",
+      address: "",
+      introduction: "",
       talent_scope: [],
-      social_media_links: [''],
-      additional_links: [''],
-      portfolio_links: [''],
+      social_media_links: [""],
+      additional_links: [""],
+      portfolio_links: [""],
       selected_certificates: [],
       national_level_certificate: null,
       internation_level_certificate_award: null,
@@ -888,40 +973,40 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
       district_level_certificate: null,
       college_level_certificate: null,
       other_certificate: null,
-      agreeTerms: false
+      agreeTerms: false,
     });
-    
+
     // Reset file inputs
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
-    
-    Object.values(certificateFileRefs).forEach(ref => {
+
+    Object.values(certificateFileRefs).forEach((ref) => {
       if (ref.current) {
-        ref.current.value = '';
+        ref.current.value = "";
       }
     });
-    
+
     // Navigate
-    navigate(fromEvent ? '/Events' : '/Login');
+    navigate(fromEvent ? "/Events" : "/Login");
   };
 
   // Reset form when component unmounts
   useEffect(() => {
     return () => {
       setErrors({});
-      setApiError('');
+      setApiError("");
       setSubmitSuccess(false);
       setVerificationSuccess(false);
-      setCurrentStep('registration');
-      setVerificationCode('');
-      setRegisteredEmail('');
+      setCurrentStep("registration");
+      setVerificationCode("");
+      setRegisteredEmail("");
       setResendSuccess(false);
       setApiResponse(null);
       setCountdown(0);
-      setAlreadyRegisteredMessage('');
-      setPhoneAlreadyRegisteredMessage('');
-      setUserTypeError('');
+      setAlreadyRegisteredMessage("");
+      setPhoneAlreadyRegisteredMessage("");
+      setUserTypeError("");
       setCertificateUrls({});
       setEmailNotVerified(false);
       setCheckingEmail(false);
@@ -929,7 +1014,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   }, []);
 
   // Get today's date in YYYY-MM-DD format for max attribute
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   // Check if links error is a string or array
   const getLinkError = (errorType, index) => {
@@ -939,7 +1024,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
       }
       return errors[errorType];
     }
-    return '';
+    return "";
   };
 
   // ==================== ENHANCED DOWNLOAD FUNCTION ====================
@@ -948,145 +1033,207 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   const handlePrintPreview = async () => {
     try {
       // Find the preview container element
-      const previewContainer = document.querySelector('.preview-container');
+      const previewContainer = document.querySelector(".preview-container");
       if (!previewContainer) {
-        console.error('Preview container not found');
-        alert('Error: Could not find preview content. Please refresh the page.');
+        console.error("Preview container not found");
+        alert(
+          "Error: Could not find preview content. Please refresh the page.",
+        );
         return;
       }
 
-      // Load html2canvas if not already loaded
-      if (!window.html2canvas) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-
-      // Load jsPDF if not already loaded
-      if (!window.jsPDF) {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      }
-
       // Hide action buttons temporarily
-      const previewActions = previewContainer.querySelector('.preview-actions');
-      const originalDisplay = previewActions ? previewActions.style.display : '';
+      const previewActions = previewContainer.querySelector(".preview-actions");
+      const originalDisplay = previewActions
+        ? previewActions.style.display
+        : "";
       if (previewActions) {
-        previewActions.style.display = 'none';
+        previewActions.style.display = "none";
       }
 
-      // Create a deep clone of the container to avoid modifying the original
-      const clonedContainer = previewContainer.cloneNode(true);
-      clonedContainer.style.width = previewContainer.offsetWidth + 'px';
-      clonedContainer.style.position = 'absolute';
-      clonedContainer.style.left = '-9999px';
-      clonedContainer.style.top = '-9999px';
-      clonedContainer.style.visibility = 'hidden';
-      document.body.appendChild(clonedContainer);
-
+      // Try to use html2canvas and jsPDF from CDN or fallback to print
       try {
-        // Remove no-print elements from cloned container
-        const noPrintElements = clonedContainer.querySelectorAll('.no-print');
-        noPrintElements.forEach(el => el.remove());
+        // Load html2canvas if not already loaded
+        if (!window.html2canvas) {
+          const script = document.createElement("script");
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
 
-        // Generate canvas from cloned element
-        const canvas = await window.html2canvas(clonedContainer, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          windowWidth: clonedContainer.scrollWidth,
-          windowHeight: clonedContainer.scrollHeight,
-          backgroundColor: '#ffffff'
-        });
+        // Load jsPDF if not already loaded
+        if (!window.jsPDF) {
+          const script = document.createElement("script");
+          script.src =
+            "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
 
-        // Create PDF
-        const pdf = new window.jsPDF.jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
+        // Create a deep clone of the container to avoid modifying the original
+        const clonedContainer = previewContainer.cloneNode(true);
+        clonedContainer.style.width = previewContainer.offsetWidth + "px";
+        clonedContainer.style.position = "absolute";
+        clonedContainer.style.left = "-9999px";
+        clonedContainer.style.top = "-9999px";
+        clonedContainer.style.visibility = "hidden";
+        clonedContainer.style.background = "white";
+        document.body.appendChild(clonedContainer);
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const imgWidth = 210; // A4 width in mm
-        const pageHeight = 297; // A4 height in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        try {
+          // Remove no-print elements from cloned container
+          const noPrintElements = clonedContainer.querySelectorAll(".no-print");
+          noPrintElements.forEach((el) => el.remove());
 
-        // Calculate number of pages needed
-        let heightLeft = imgHeight;
-        let position = 0;
-        const pageCount = Math.ceil(imgHeight / pageHeight);
+          // Copy all computed styles from original to cloned elements
+          const copyStyles = (source, target) => {
+            const computed = window.getComputedStyle(source);
+            for (let prop of computed) {
+              try {
+                target.style[prop] = computed.getPropertyValue(prop);
+              } catch (e) {
+                // Skip properties that can't be set
+              }
+            }
+            // Recursively copy styles for child elements
+            for (let i = 0; i < source.children.length; i++) {
+              copyStyles(source.children[i], target.children[i]);
+            }
+          };
 
-        for (let i = 0; i < pageCount; i++) {
-          if (i > 0) {
-            pdf.addPage();
+          // Apply computed styles from original preview container
+          copyStyles(previewContainer, clonedContainer);
+
+          // Wait a moment for styles to be applied
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
+          // Generate canvas from cloned element with better settings
+          const canvas = await window.html2canvas(clonedContainer, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            windowWidth: clonedContainer.scrollWidth,
+            windowHeight: clonedContainer.scrollHeight,
+            imageTimeout: 0,
+          });
+
+          // Create PDF
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+          });
+
+          const imgData = canvas.toDataURL("image/jpeg", 0.95);
+          const imgWidth = 210; // A4 width in mm
+          const pageHeight = 297; // A4 height in mm
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          // Calculate number of pages needed
+          let heightLeft = imgHeight;
+          let position = 0;
+          const pageCount = Math.ceil(imgHeight / pageHeight);
+
+          for (let i = 0; i < pageCount; i++) {
+            if (i > 0) {
+              pdf.addPage();
+            }
+            pdf.addImage(imgData, "JPEG", 0, position, imgWidth, pageHeight);
+            position -= pageHeight;
           }
-          pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, pageHeight);
-          position -= pageHeight;
-        }
 
-        // Generate filename
-        const fileName = `registration-preview-${formData.full_name.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
-        pdf.save(fileName);
+          // Generate filename
+          const fileName = `registration-preview-${formData.full_name.toLowerCase().replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`;
+          pdf.save(fileName);
+        } finally {
+          // Clean up cloned element
+          if (document.body.contains(clonedContainer)) {
+            document.body.removeChild(clonedContainer);
+          }
 
-      } finally {
-        // Clean up cloned element
-        document.body.removeChild(clonedContainer);
-        
-        // Restore action buttons
-        if (previewActions) {
-          previewActions.style.display = originalDisplay;
+          // Restore action buttons
+          if (previewActions) {
+            previewActions.style.display = originalDisplay;
+          }
         }
+      } catch (loadError) {
+        console.error("Error loading or using PDF libraries:", loadError);
+        // Fallback to print method if PDF generation fails
+        handlePrintFallback();
       }
-
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF: ' + error.message + '\nFalling back to print method...');
+      console.error("Error in handlePrintPreview:", error);
+      alert(
+        "Error generating PDF: " +
+          error.message +
+          "\nFalling back to print method...",
+      );
       // Fallback to print
       handlePrintFallback();
     }
   };
-  
+
   // Fallback print method - improved to exclude no-print elements
   const handlePrintFallback = () => {
     try {
-      const previewContainer = document.querySelector('.preview-container');
+      const previewContainer = document.querySelector(".preview-container");
       if (!previewContainer) {
-        console.error('Preview container not found');
-        alert('Error: Could not find preview content.');
+        console.error("Preview container not found");
+        alert("Error: Could not find preview content.");
         return;
       }
-      
-      const printWindow = window.open('', '_blank');
+
+      const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        console.error('Could not open print window');
-        alert('Error: Could not open print window. Please check your browser settings.');
+        console.error("Could not open print window");
+        alert(
+          "Error: Could not open print window. Please check your browser settings.",
+        );
         return;
       }
-      
+
       // Clone the container and remove no-print elements
       const clonedContainer = previewContainer.cloneNode(true);
-      const noPrintElements = clonedContainer.querySelectorAll('.no-print');
-      noPrintElements.forEach(el => el.remove());
-      
+      const noPrintElements = clonedContainer.querySelectorAll(".no-print");
+      noPrintElements.forEach((el) => el.remove());
+
       printWindow.document.write(`
         <html>
           <head>
             <title>Registration Preview</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <style>
-              body { font-family: Arial, sans-serif; color: #333; padding: 20px; }
+              body { font-family: 'Times New Roman', serif; color: #333; padding: 20px; background-color: #fff; }
+              .government-form-preview {
+                max-width: 210mm;
+                margin: 0 auto;
+                box-shadow: 0 0 15px rgba(0,0,0,0.1);
+                background-color: #f8f9fa;
+              }
               @media print {
-                body { padding: 0; }
-                .no-print { display: none !important; }
+                body { 
+                  padding: 0; 
+                  background-color: #fff;
+                }
+                .no-print { 
+                  display: none !important; 
+                }
+                .government-form-preview {
+                  box-shadow: none;
+                }
+                @page {
+                  margin: 15mm;
+                }
               }
             </style>
           </head>
@@ -1095,21 +1242,20 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
           </body>
         </html>
       `);
-      
+
       printWindow.document.close();
       printWindow.focus();
-      
+
       // Wait for content to load before printing
       setTimeout(() => {
         printWindow.print();
-      }, 250);
-      
+      }, 500);
     } catch (error) {
-      console.error('Error in print fallback:', error);
-      alert('Error opening print dialog: ' + error.message);
+      console.error("Error in print fallback:", error);
+      alert("Error opening print dialog: " + error.message);
     }
   };
-  
+
   // ===========================================================
 
   // Handle registration form submission
@@ -1117,77 +1263,92 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
     if (e && e.preventDefault) {
       e.preventDefault();
     }
-    
+
     setIsSubmitting(true);
-    setApiError('');
+    setApiError("");
     setApiResponse(null);
-    setAlreadyRegisteredMessage(''); // Clear any previous already registered message
-    setPhoneAlreadyRegisteredMessage(''); // Clear any previous phone already registered message
-    setUserTypeError(''); // Clear any previous user type error
-    
+    setAlreadyRegisteredMessage(""); // Clear any previous already registered message
+    setPhoneAlreadyRegisteredMessage(""); // Clear any previous phone already registered message
+    setUserTypeError(""); // Clear any previous user type error
+
     try {
       // Create FormData for file upload
       const apiFormData = new FormData();
-      
+
       // Add user type - ensure it's a clean string without quotes
       // Make sure we're sending exactly 'individual' or 'team' without any extra characters
-      apiFormData.append('user_type', formData.user_type);
-      
+      apiFormData.append("user_type", formData.user_type);
+
       // Add team name if team
-      if (formData.user_type === 'team') {
-        apiFormData.append('team_name', formData.team_name);
+      if (formData.user_type === "team") {
+        apiFormData.append("team_name", formData.team_name);
       }
-      
+
       // Add all form fields
-      apiFormData.append('full_name', formData.full_name);
-      apiFormData.append('gender', formData.gender);
-      
-      if (formData.user_type === 'individual') {
-        apiFormData.append('date_of_birth', formData.date_of_birth);
+      apiFormData.append("full_name", formData.full_name);
+      apiFormData.append("gender", formData.gender);
+
+      if (formData.user_type === "individual") {
+        apiFormData.append("date_of_birth", formData.date_of_birth);
       }
-      
-      apiFormData.append('email', formData.email);
-      apiFormData.append('password', formData.password);
-      apiFormData.append('country', formData.country);
-      apiFormData.append('state', formData.state);
-      apiFormData.append('city', formData.city);
-      apiFormData.append('phone', formData.phone);
-      apiFormData.append('address', formData.address);
-      apiFormData.append('introduction', formData.introduction);
-      
+
+      apiFormData.append("email", formData.email);
+      apiFormData.append("password", formData.password);
+      apiFormData.append("country", formData.country);
+      apiFormData.append("state", formData.state);
+      apiFormData.append("city", formData.city);
+      apiFormData.append("phone", formData.phone);
+      apiFormData.append("address", formData.address);
+      apiFormData.append("introduction", formData.introduction);
+
       // Add profile image
       if (formData.profile_image) {
-        apiFormData.append('profile_image', formData.profile_image);
+        apiFormData.append("profile_image", formData.profile_image);
       }
-      
+
       // Add talent scope as JSON string
-      apiFormData.append('talent_scope', JSON.stringify(formData.talent_scope));
-      
+      apiFormData.append("talent_scope", JSON.stringify(formData.talent_scope));
+
       // Add social media links as JSON string
-      const validSocialMediaLinks = formData.social_media_links.filter(link => link.trim() !== '');
-      apiFormData.append('social_media_link', JSON.stringify(validSocialMediaLinks));
-      
+      const validSocialMediaLinks = formData.social_media_links.filter(
+        (link) => link.trim() !== "",
+      );
+      apiFormData.append(
+        "social_media_link",
+        JSON.stringify(validSocialMediaLinks),
+      );
+
       // Add additional links as JSON string
-      const validAdditionalLinks = formData.additional_links.filter(link => link.trim() !== '');
+      const validAdditionalLinks = formData.additional_links.filter(
+        (link) => link.trim() !== "",
+      );
       if (validAdditionalLinks.length > 0) {
-        apiFormData.append('additional_link', JSON.stringify(validAdditionalLinks));
+        apiFormData.append(
+          "additional_link",
+          JSON.stringify(validAdditionalLinks),
+        );
       }
-      
+
       // Add portfolio links as JSON string
-      const validPortfolioLinks = formData.portfolio_links.filter(link => link.trim() !== '');
+      const validPortfolioLinks = formData.portfolio_links.filter(
+        (link) => link.trim() !== "",
+      );
       if (validPortfolioLinks.length > 0) {
-        apiFormData.append('portfolio_link', JSON.stringify(validPortfolioLinks));
+        apiFormData.append(
+          "portfolio_link",
+          JSON.stringify(validPortfolioLinks),
+        );
       }
-      
+
       // Add certificate files
-      certificateOptions.forEach(option => {
+      certificateOptions.forEach((option) => {
         if (formData[option.id]) {
           apiFormData.append(option.id, formData[option.id]);
         }
       });
 
       // Log the form data for debugging
-      console.log('Submitting registration data:');
+      console.log("Submitting registration data:");
       for (let [key, value] of apiFormData.entries()) {
         console.log(`${key}:`, value);
       }
@@ -1195,19 +1356,22 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
       // API call with timeout and proper error handling
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
-      const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/reg-user/', {
-        method: 'POST',
-        body: apiFormData,
-        headers: {
-          'Accept': 'application/json'
+
+      const response = await fetch(
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/reg-user/",
+        {
+          method: "POST",
+          body: apiFormData,
+          headers: {
+            Accept: "application/json",
+          },
+          signal: controller.signal,
+          mode: "cors", // Explicitly set CORS mode
         },
-        signal: controller.signal,
-        mode: 'cors' // Explicitly set CORS mode
-      });
-      
+      );
+
       clearTimeout(timeoutId);
-      
+
       // Try to parse the response
       let data;
       try {
@@ -1215,69 +1379,73 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
       } catch (e) {
         // If we can't parse JSON, use status text
         if (!response.ok) {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          throw new Error(
+            `Server returned ${response.status}: ${response.statusText}`,
+          );
         }
         // If response is OK but we can't parse JSON, treat it as success
         data = { success: true };
       }
-      
-      console.log('API Response:', data); // Log the response for debugging
+
+      console.log("API Response:", data); // Log the response for debugging
       setApiResponse(data); // Store response for debugging
-      
+
       // Check if response is OK
       if (!response.ok) {
         // Handle different error formats
         if (data.message) {
           // Check if this is the "Email not verified" case
-          if (data.message === 'Email not verified. Verification code resent.') {
+          if (
+            data.message === "Email not verified. Verification code resent."
+          ) {
             // Set the already registered message
             setAlreadyRegisteredMessage(data.message);
             // Set the registered email for verification
             setRegisteredEmail(formData.email);
             // Move to verification step
-            setCurrentStep('verification');
+            setCurrentStep("verification");
             setIsSubmitting(false);
             return;
           }
-           // Check if this is the "Email already registered and verified" case
-          else if (data.message === 'Email already registered and verified.') {
+          // Check if this is the "Email already registered and verified" case
+          else if (data.message === "Email already registered and verified.") {
             // Set the already registered message
             setAlreadyRegisteredMessage(data.message);
             setIsSubmitting(false);
-            
+
             // Scroll to the email field
             setTimeout(() => {
               const emailField = document.querySelector('[name="email"]');
               if (emailField) {
-                emailField.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
+                emailField.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
                 });
                 emailField.focus();
               }
             }, 100);
-            
+
             return;
           }
-           // Check if this is the "Phone number already in use" case
-          else if (data.message === 'This phone number is already in use.') {
+          // Check if this is the "Phone number already in use" case
+          else if (data.message === "This phone number is already in use.") {
             // Set the phone error
-            setErrors(prev => ({ ...prev, phone: data.message }));
+            setErrors((prev) => ({ ...prev, phone: data.message }));
             setPhoneAlreadyRegisteredMessage(data.message);
             setIsSubmitting(false);
-            
+
             // Scroll to the phone field
             setTimeout(() => {
               const phoneField = document.querySelector('[name="phone"]');
               if (phoneField) {
-                phoneField.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
+                phoneField.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
                 });
                 phoneField.focus();
               }
             }, 100);
-            
+
             return;
           }
           throw new Error(data.message);
@@ -1286,104 +1454,111 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
         } else if (data.errors) {
           // If there are field-specific errors, extract them
           const errorMessages = Object.values(data.errors).flat();
-          
+
           // Check for user_type error specifically
           if (data.errors.user_type) {
-            const userTypeErrorMsg = Array.isArray(data.errors.user_type) 
-              ? data.errors.user_type[0] 
+            const userTypeErrorMsg = Array.isArray(data.errors.user_type)
+              ? data.errors.user_type[0]
               : data.errors.user_type;
             setUserTypeError(userTypeErrorMsg);
           }
-          
-          throw new Error(errorMessages.join(', '));
+
+          throw new Error(errorMessages.join(", "));
         } else if (data.detail) {
           throw new Error(data.detail);
         } else if (data.email) {
           // Check if this is the "Email already registered and verified" case
-          if (data.email === 'Email already registered and verified.') {
+          if (data.email === "Email already registered and verified.") {
             // Set the already registered message
             setAlreadyRegisteredMessage(data.email);
             setIsSubmitting(false);
-            
+
             // Scroll to the email field
             setTimeout(() => {
               const emailField = document.querySelector('[name="email"]');
               if (emailField) {
-                emailField.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
+                emailField.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
                 });
                 emailField.focus();
               }
             }, 100);
-            
+
             return;
           }
           throw new Error(data.email);
         } else if (data.phone) {
           // Check if this is the "Phone number already in use" case
-          if (data.phone === 'This phone number is already in use.') {
+          if (data.phone === "This phone number is already in use.") {
             // Set the phone error
-            setErrors(prev => ({ ...prev, phone: data.phone }));
+            setErrors((prev) => ({ ...prev, phone: data.phone }));
             setPhoneAlreadyRegisteredMessage(data.phone);
             setIsSubmitting(false);
-            
+
             // Scroll to the phone field
             setTimeout(() => {
               const phoneField = document.querySelector('[name="phone"]');
               if (phoneField) {
-                phoneField.scrollIntoView({ 
-                  behavior: 'smooth', 
-                  block: 'center' 
+                phoneField.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
                 });
                 phoneField.focus();
               }
             }, 100);
-            
+
             return;
           }
           throw new Error(data.phone);
         } else if (data.user_type) {
           // Handle user_type error
-          const userTypeErrorMsg = Array.isArray(data.user_type) 
-            ? data.user_type[0] 
+          const userTypeErrorMsg = Array.isArray(data.user_type)
+            ? data.user_type[0]
             : data.user_type;
           setUserTypeError(userTypeErrorMsg);
           setIsSubmitting(false);
           return;
         } else if (data.non_field_errors) {
           // Handle non-field errors
-          throw new Error(data.non_field_errors.join(', '));
+          throw new Error(data.non_field_errors.join(", "));
         } else {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          throw new Error(
+            `Server returned ${response.status}: ${response.statusText}`,
+          );
         }
       }
-      
+
       // On success, transition to verification step
       // Form data is kept in React state for secure handling
       setRegisteredEmail(formData.email);
       setSubmitSuccess(true);
       setIsSubmitting(false);
-      
+
       // Move to verification step immediately
       setTimeout(() => {
-        setCurrentStep('verification');
+        setCurrentStep("verification");
       }, 500);
-      
     } catch (error) {
-      console.error('Registration error:', error);
-      
+      console.error("Registration error:", error);
+
       // Handle different types of errors
-      if (error.name === 'AbortError') {
-        setApiError('Request timed out. Please check your connection and try again.');
-      } else if (error.message.includes('Failed to fetch')) {
-        setApiError('Network error: Unable to connect to the server. Please check your internet connection and try again.');
-      } else if (error.message.includes('CORS')) {
-        setApiError('Network error: CORS policy issue. Please contact support.');
+      if (error.name === "AbortError") {
+        setApiError(
+          "Request timed out. Please check your connection and try again.",
+        );
+      } else if (error.message.includes("Failed to fetch")) {
+        setApiError(
+          "Network error: Unable to connect to the server. Please check your internet connection and try again.",
+        );
+      } else if (error.message.includes("CORS")) {
+        setApiError(
+          "Network error: CORS policy issue. Please contact support.",
+        );
       } else {
         setApiError(`Error: ${error.message}`);
       }
-      
+
       setIsSubmitting(false);
     }
   };
@@ -1391,50 +1566,55 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   // Handle verification form submission
   const handleVerificationSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (validateVerificationForm()) {
       setIsSubmitting(true);
-      setApiError('');
-      
+      setApiError("");
+
       try {
         // API call with timeout and proper error handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-        
+
         // Changed to JSON format instead of FormData
-        const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/verify-email/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        const response = await fetch(
+          "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/verify-email/",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              email: registeredEmail,
+              code: verificationCode,
+            }),
+            signal: controller.signal,
+            mode: "cors", // Explicitly set CORS mode
           },
-          body: JSON.stringify({
-            email: registeredEmail,
-            code: verificationCode
-          }),
-          signal: controller.signal,
-          mode: 'cors' // Explicitly set CORS mode
-        });
-        
+        );
+
         clearTimeout(timeoutId);
-        
-        console.log('Verification payload:', {
+
+        console.log("Verification payload:", {
           email: registeredEmail,
-          code: verificationCode
+          code: verificationCode,
         });
-        
+
         // Check if response is OK
         if (!response.ok) {
           // Try to get error details from response
           let errorData;
           try {
             errorData = await response.json();
-            console.log('Error response:', errorData);
+            console.log("Error response:", errorData);
           } catch (e) {
             // If we can't parse JSON, use status text
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            throw new Error(
+              `Server returned ${response.status}: ${response.statusText}`,
+            );
           }
-          
+
           // Handle different error formats
           if (errorData.message) {
             throw new Error(errorData.message);
@@ -1443,57 +1623,67 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
           } else if (errorData.detail) {
             throw new Error(errorData.detail);
           } else {
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            throw new Error(
+              `Server returned ${response.status}: ${response.statusText}`,
+            );
           }
         }
-        
+
         // Parse successful response
         const data = await response.json();
-        console.log('Verification API Response:', data); // Log the response for debugging
-        
+        console.log("Verification API Response:", data); // Log the response for debugging
+
         // On success, fetch user_id using the registered email
         try {
-          const userIdResponse = await fetch(`https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/get-userid/?email=${encodeURIComponent(registeredEmail)}`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json'
+          const userIdResponse = await fetch(
+            `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/get-userid/?email=${encodeURIComponent(registeredEmail)}`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+              mode: "cors",
             },
-            mode: 'cors'
-          });
-          
+          );
+
           if (userIdResponse.ok) {
             const userIdData = await userIdResponse.json();
-            console.log('User ID API Response:', userIdData); // Log the response for debugging
+            console.log("User ID API Response:", userIdData); // Log the response for debugging
             if (userIdData.user_id) {
               setUserId(userIdData.user_id);
             }
           } else {
-            console.warn('Could not fetch user ID:', userIdResponse.status);
+            console.warn("Could not fetch user ID:", userIdResponse.status);
           }
         } catch (userIdError) {
-          console.warn('Error fetching user ID:', userIdError);
+          console.warn("Error fetching user ID:", userIdError);
           // Continue without user_id, it's not critical
         }
-        
+
         // On success, show preview with form data (persisted in React state)
         // Form data has been maintained in state throughout the process
         setVerificationSuccess(true);
         setIsSubmitting(false);
-        
       } catch (error) {
-        console.error('Verification error:', error);
-        
+        console.error("Verification error:", error);
+
         // Handle different types of errors
-        if (error.name === 'AbortError') {
-          setApiError('Request timed out. Please check your connection and try again.');
-        } else if (error.message.includes('Failed to fetch')) {
-          setApiError('Network error: Unable to connect to the server. Please check your internet connection and try again.');
-        } else if (error.message.includes('CORS')) {
-          setApiError('Network error: CORS policy issue. Please contact support.');
+        if (error.name === "AbortError") {
+          setApiError(
+            "Request timed out. Please check your connection and try again.",
+          );
+        } else if (error.message.includes("Failed to fetch")) {
+          setApiError(
+            "Network error: Unable to connect to the server. Please check your internet connection and try again.",
+          );
+        } else if (error.message.includes("CORS")) {
+          setApiError(
+            "Network error: CORS policy issue. Please contact support.",
+          );
         } else {
           setApiError(`Error: ${error.message}`);
         }
-        
+
         setIsSubmitting(false);
       }
     }
@@ -1502,48 +1692,53 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
   // Handle resend verification code - Updated to use the correct API endpoint
   const handleResendCode = async () => {
     if (countdown > 0) return; // Prevent multiple requests during countdown
-    
+
     setIsSubmitting(true);
-    setApiError('');
+    setApiError("");
     setResendSuccess(false);
-    
+
     try {
       // API call with timeout and proper error handling
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-      
+
       // Updated to use the correct resend email OTP endpoint
-      const response = await fetch('https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/resend-email-otp/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await fetch(
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/resend-email-otp/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            email: registeredEmail,
+          }),
+          signal: controller.signal,
+          mode: "cors", // Explicitly set CORS mode
         },
-        body: JSON.stringify({
-          email: registeredEmail
-        }),
-        signal: controller.signal,
-        mode: 'cors' // Explicitly set CORS mode
-      });
-      
+      );
+
       clearTimeout(timeoutId);
-      
-      console.log('Resend OTP payload:', {
-        email: registeredEmail
+
+      console.log("Resend OTP payload:", {
+        email: registeredEmail,
       });
-      
+
       // Check if response is OK
       if (!response.ok) {
         // Try to get error details from response
         let errorData;
         try {
           errorData = await response.json();
-          console.log('Error response:', errorData);
+          console.log("Error response:", errorData);
         } catch (e) {
           // If we can't parse JSON, use status text
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          throw new Error(
+            `Server returned ${response.status}: ${response.statusText}`,
+          );
         }
-        
+
         // Handle different error formats
         if (errorData.message) {
           throw new Error(errorData.message);
@@ -1552,22 +1747,24 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
         } else if (errorData.detail) {
           throw new Error(errorData.detail);
         } else {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+          throw new Error(
+            `Server returned ${response.status}: ${response.statusText}`,
+          );
         }
       }
-      
+
       // Parse successful response
       const data = await response.json();
-      console.log('Resend OTP API Response:', data); // Log the response for debugging
-      
+      console.log("Resend OTP API Response:", data); // Log the response for debugging
+
       // On success
       setResendSuccess(true);
       setIsSubmitting(false);
-      
+
       // Start countdown for 60 seconds
       setCountdown(60);
       const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
+        setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(countdownInterval);
             return 0;
@@ -1575,26 +1772,31 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
           return prev - 1;
         });
       }, 1000);
-      
+
       // Hide success message after 3 seconds
       setTimeout(() => {
         setResendSuccess(false);
       }, 3000);
-      
     } catch (error) {
-      console.error('Resend OTP error:', error);
-      
+      console.error("Resend OTP error:", error);
+
       // Handle different types of errors
-      if (error.name === 'AbortError') {
-        setApiError('Request timed out. Please check your connection and try again.');
-      } else if (error.message.includes('Failed to fetch')) {
-        setApiError('Network error: Unable to connect to the server. Please check your internet connection and try again.');
-      } else if (error.message.includes('CORS')) {
-        setApiError('Network error: CORS policy issue. Please contact support.');
+      if (error.name === "AbortError") {
+        setApiError(
+          "Request timed out. Please check your connection and try again.",
+        );
+      } else if (error.message.includes("Failed to fetch")) {
+        setApiError(
+          "Network error: Unable to connect to the server. Please check your internet connection and try again.",
+        );
+      } else if (error.message.includes("CORS")) {
+        setApiError(
+          "Network error: CORS policy issue. Please contact support.",
+        );
       } else {
         setApiError(`Error: ${error.message}`);
       }
-      
+
       setIsSubmitting(false);
     }
   };
@@ -1605,26 +1807,42 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
         <div className="site-breadcrumb-wpr">
           <h2 className="breadcrumb-title">User Registration</h2>
           <ul className="breadcrumb-menu clearfix" type="none">
-            <li><a className="breadcrumb-home" href="/" data-discover="true">Home</a></li>
+            <li>
+              <a className="breadcrumb-home" href="/" data-discover="true">
+                Home
+              </a>
+            </li>
             <li className="px-2">/</li>
-            <li><a className="breadcrumb-about" href="/" data-discover="true">Registration</a></li>
+            <li>
+              <a className="breadcrumb-about" href="/" data-discover="true">
+                Registration
+              </a>
+            </li>
           </ul>
         </div>
       </div>
-      
-      <div className='container box-shadow-reg'>
+
+      <div className="container box-shadow-reg">
         <main className="main">
-          <section id="registration" className="registration section-registration section-gallery">
+          <section
+            id="registration"
+            className="registration section-registration section-gallery"
+          >
             <div className="container" data-aos="fade-up" data-aos-delay="100">
-              {currentStep === 'registration' ? (
+              {currentStep === "registration" ? (
                 // Registration Form
                 submitSuccess ? (
                   <div className="text-center py-4">
                     <div className="success-icon mb-3">
-                      <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
+                      <i
+                        className="bi bi-check-circle-fill text-success"
+                        style={{ fontSize: "3rem" }}
+                      ></i>
                     </div>
                     <h4 className="text-success">Registration Successful!</h4>
-                    <p className="text-muted">Please check your email for verification code.</p>
+                    <p className="text-muted">
+                      Please check your email for verification code.
+                    </p>
                     <ProgressBar animated now={100} className="mt-3" />
                   </div>
                 ) : (
@@ -1632,14 +1850,17 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                     <h3 className="mb-4">User Registration</h3>
                     <Form onSubmit={handlePreviewClick}>
                       {apiError && <Alert variant="danger">{apiError}</Alert>}
-                      
+
                       {/* User Type and Profile Image Section */}
                       <Row className="mb-4">
                         {/* Left Column - User Type and Team Name */}
                         <Col md={6}>
                           {/* User Type Selection */}
                           <Form.Group className="mb-4">
-                            <Form.Label className="form-label-custom">Registration Type <span className="star">*</span> </Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Registration Type{" "}
+                              <span className="star">*</span>{" "}
+                            </Form.Label>
                             <div className="d-flex">
                               <Form.Check
                                 type="radio"
@@ -1647,8 +1868,10 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 name="user_type"
                                 label="Individual"
                                 value="individual"
-                                checked={formData.user_type === 'individual'}
-                                onChange={() => handleUserTypeChange('individual')}
+                                checked={formData.user_type === "individual"}
+                                onChange={() =>
+                                  handleUserTypeChange("individual")
+                                }
                                 className="me-4 user-type-option"
                               />
                               <Form.Check
@@ -1657,8 +1880,8 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 name="user_type"
                                 label="Organization"
                                 value="team"
-                                checked={formData.user_type === 'team'}
-                                onChange={() => handleUserTypeChange('team')}
+                                checked={formData.user_type === "team"}
+                                onChange={() => handleUserTypeChange("team")}
                                 className="user-type-option"
                               />
                             </div>
@@ -1668,11 +1891,13 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               </div>
                             )}
                           </Form.Group>
-                          
+
                           {/* Team Name (only for team) */}
-                          {formData.user_type === 'team' && (
+                          {formData.user_type === "team" && (
                             <Form.Group className="mb-3">
-                              <Form.Label className="form-label-custom">Team Name <span className="star">*</span></Form.Label>
+                              <Form.Label className="form-label-custom">
+                                Team Name <span className="star">*</span>
+                              </Form.Label>
                               <Form.Control
                                 type="text"
                                 name="team_name"
@@ -1682,17 +1907,22 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 placeholder="Enter your organization/team name"
                                 className="form-control-custom"
                               />
-                              <Form.Control.Feedback type="invalid" className='val-error'>
+                              <Form.Control.Feedback
+                                type="invalid"
+                                className="val-error"
+                              >
                                 {errors.team_name}
                               </Form.Control.Feedback>
                             </Form.Group>
                           )}
                         </Col>
-                        
+
                         {/* Right Column - Profile Image Upload */}
                         <Col md={6}>
                           <Form.Group className="profile-image-upload">
-                            <Form.Label className="form-label-custom">Profile Image</Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Profile Image
+                            </Form.Label>
                             <div className="d-flex flex-column align-items-center">
                               {formData.profile_image_preview ? (
                                 <div className="position-relative">
@@ -1700,7 +1930,11 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                     src={formData.profile_image_preview}
                                     alt="Profile Preview"
                                     roundedCircle
-                                    style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                    style={{
+                                      width: "100px",
+                                      height: "100px",
+                                      objectFit: "cover",
+                                    }}
                                   />
                                   <Button
                                     variant="danger"
@@ -1716,17 +1950,28 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                   className="upload-icon-container d-flex align-items-center justify-content-center"
                                   onClick={() => fileInputRef.current.click()}
                                   style={{
-                                    cursor: 'pointer',
-                                    width: '150px',
-                                    height: '150px',
-                                    border: '2px dashed #ccc',
-                                    borderRadius: '50%',
-                                    transition: 'all 0.3s ease'
+                                    cursor: "pointer",
+                                    width: "150px",
+                                    height: "150px",
+                                    border: "2px dashed #ccc",
+                                    borderRadius: "50%",
+                                    transition: "all 0.3s ease",
                                   }}
-                                  onMouseOver={(e) => e.currentTarget.style.borderColor = '#0d6efd'}
-                                  onMouseOut={(e) => e.currentTarget.style.borderColor = '#ccc'}
+                                  onMouseOver={(e) =>
+                                    (e.currentTarget.style.borderColor =
+                                      "#0d6efd")
+                                  }
+                                  onMouseOut={(e) =>
+                                    (e.currentTarget.style.borderColor = "#ccc")
+                                  }
                                 >
-                                  <i className="bi bi-cloud-arrow-up" style={{ fontSize: '3rem', color: '#0d6efd' }}></i>
+                                  <i
+                                    className="bi bi-cloud-arrow-up"
+                                    style={{
+                                      fontSize: "3rem",
+                                      color: "#0d6efd",
+                                    }}
+                                  ></i>
                                 </div>
                               )}
                               <Form.Control
@@ -1739,21 +1984,28 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 className="profile-image-input d-none"
                               />
                               <Form.Text className="text-muted mt-2">
-                                {formData.profile_image_preview ? 'Click the image to change' : 'Click the icon to upload a profile picture (JPEG, JPG, PNG, or GIF, max 1MB)'}
+                                {formData.profile_image_preview
+                                  ? "Click the image to change"
+                                  : "Click the icon to upload a profile picture (JPEG, JPG, PNG, or GIF, max 1MB)"}
                               </Form.Text>
-                              <Form.Control.Feedback type="invalid" className="val-error mt-2">
+                              <Form.Control.Feedback
+                                type="invalid"
+                                className="val-error mt-2"
+                              >
                                 {errors.profile_image}
                               </Form.Control.Feedback>
                             </div>
                           </Form.Group>
                         </Col>
                       </Row>
-                      
+
                       {/* Full Name and Gender */}
                       <Row>
                         <Col md={6}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Full Name <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Full Name <span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="full_name"
@@ -1763,14 +2015,19 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="Enter your full name"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.full_name}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
                         <Col md={4}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Gender <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Gender <span className="star">*</span>
+                            </Form.Label>
                             <div className="d-flex">
                               <Form.Check
                                 type="radio"
@@ -1778,7 +2035,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 name="gender"
                                 label="Male"
                                 value="Male"
-                                checked={formData.gender === 'Male'}
+                                checked={formData.gender === "Male"}
                                 onChange={handleChange}
                                 className="me-3 gender-option"
                               />
@@ -1788,7 +2045,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 name="gender"
                                 label="Female"
                                 value="Female"
-                                checked={formData.gender === 'Female'}
+                                checked={formData.gender === "Female"}
                                 onChange={handleChange}
                                 className="me-3 gender-option"
                               />
@@ -1798,7 +2055,7 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 name="gender"
                                 label="Other"
                                 value="Other"
-                                checked={formData.gender === 'Other'}
+                                checked={formData.gender === "Other"}
                                 onChange={handleChange}
                                 className="gender-option"
                               />
@@ -1810,73 +2067,99 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             )}
                           </Form.Group>
                         </Col>
-                    
-<Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Email Address<span className="star">*</span></Form.Label>
-                        <div className="d-flex align-items-center">
-                          <Form.Control
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            isInvalid={!!errors.email}
-                            placeholder="Enter your email"
-                            className="form-control-custom"
-                          />
-                          {checkingEmail && (
-                            <div className="ms-2">
-                              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                <span className="visually-hidden">Checking...</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <Form.Control.Feedback type="invalid" className='val-error'>
-                          {errors.email}
-                        </Form.Control.Feedback>
-                        
-                        {/* Display verification link for already registered but unverified email */}
-                        {emailNotVerified && (
-                          <Alert variant="warning" className="mt-2">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div>
-                                This email is already registered but not verified.
-                              </div>
-                              <Button
-                                variant="outline-primary"
-                                size="sm"
-                                onClick={handleDirectVerification}
-                              >
-                                Verify Email
-                              </Button>
-                            </div>
-                          </Alert>
-                        )}
-                        
-                        {/* Display already registered message below the email field */}
-                        {alreadyRegisteredMessage && (
-                          <Alert variant={alreadyRegisteredMessage.includes('not verified') ? 'warning' : 'info'} className="mt-2">
-                            {alreadyRegisteredMessage}
-                            {alreadyRegisteredMessage.includes('not verified') && (
-                              <div className="mt-2">
-                                <Button
-                                  variant="primary"
-                                  size="sm"
-                                  onClick={() => setCurrentStep('verification')}
-                                >
-                                  Verify Email Now
-                                </Button>
-                              </div>
-                            )}
-                          </Alert>
-                        )}
-                      </Form.Group>
-</Col>
-                  
-                     <Col lg={6} md={6} sm={12}>
+
+                        <Col lg={6}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Password <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Email Address<span className="star">*</span>
+                            </Form.Label>
+                            <div className="d-flex align-items-center">
+                              <Form.Control
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                isInvalid={!!errors.email}
+                                placeholder="Enter your email"
+                                className="form-control-custom"
+                              />
+                              {checkingEmail && (
+                                <div className="ms-2">
+                                  <div
+                                    className="spinner-border spinner-border-sm text-primary"
+                                    role="status"
+                                  >
+                                    <span className="visually-hidden">
+                                      Checking...
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
+                              {errors.email}
+                            </Form.Control.Feedback>
+
+                            {/* Display verification link for already registered but unverified email */}
+                            {emailNotVerified && (
+                              <Alert variant="warning" className="mt-2">
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    This email is already registered but not
+                                    verified.
+                                  </div>
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={handleDirectVerification}
+                                  >
+                                    Verify Email
+                                  </Button>
+                                </div>
+                              </Alert>
+                            )}
+
+                            {/* Display already registered message below the email field */}
+                            {alreadyRegisteredMessage && (
+                              <Alert
+                                variant={
+                                  alreadyRegisteredMessage.includes(
+                                    "not verified",
+                                  )
+                                    ? "warning"
+                                    : "info"
+                                }
+                                className="mt-2"
+                              >
+                                {alreadyRegisteredMessage}
+                                {alreadyRegisteredMessage.includes(
+                                  "not verified",
+                                ) && (
+                                  <div className="mt-2">
+                                    <Button
+                                      variant="primary"
+                                      size="sm"
+                                      onClick={() =>
+                                        setCurrentStep("verification")
+                                      }
+                                    >
+                                      Verify Email Now
+                                    </Button>
+                                  </div>
+                                )}
+                              </Alert>
+                            )}
+                          </Form.Group>
+                        </Col>
+
+                        <Col lg={6} md={6} sm={12}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Password <span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="password"
                               name="password"
@@ -1886,14 +2169,19 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="Enter your password"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.password}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                       <Col lg={6} md={6} sm={12}>
+                        <Col lg={6} md={6} sm={12}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Confirm Password<span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Confirm Password<span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="password"
                               name="confirmPassword"
@@ -1903,51 +2191,67 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="Confirm your password"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.confirmPassword}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                    <Col lg={6} md={6} sm={12}>
+                        <Col lg={6} md={6} sm={12}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Talent Scope <span className="star">*</span>
+                            </Form.Label>
+                            <Dropdown autoClose="outside">
+                              <Dropdown.Toggle
+                                variant=""
+                                id="talent-scope-dropdown"
+                                className="dropdown-custom"
+                              >
+                                Select Your Talents
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                {talentOptions.map((talent, index) => (
+                                  <Dropdown.Item key={index} as="div">
+                                    <Form.Check
+                                      type="checkbox"
+                                      id={`talent-${index}`}
+                                      label={talent}
+                                      checked={formData.talent_scope.includes(
+                                        talent,
+                                      )}
+                                      onChange={() =>
+                                        handleTalentScopeChange(talent)
+                                      }
+                                    />
+                                  </Dropdown.Item>
+                                ))}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                            {formData.talent_scope.length > 0 && (
+                              <div className="mt-2">
+                                <small className="text-muted">
+                                  Selected: {formData.talent_scope.join(", ")}
+                                </small>
+                              </div>
+                            )}
+                            {errors.talent_scope && (
+                              <div className="val-error mt-1 text-danger">
+                                {errors.talent_scope}
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
 
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Talent Scope <span className="star">*</span></Form.Label>
-                        <Dropdown autoClose="outside">
-                          <Dropdown.Toggle variant="" id="talent-scope-dropdown" className="dropdown-custom">
-                            Select Your Talents
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            {talentOptions.map((talent, index) => (
-                              <Dropdown.Item key={index} as="div">
-                                <Form.Check
-                                  type="checkbox"
-                                  id={`talent-${index}`}
-                                  label={talent}
-                                  checked={formData.talent_scope.includes(talent)}
-                                  onChange={() => handleTalentScopeChange(talent)}
-                                />
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                        {formData.talent_scope.length > 0 && (
-                          <div className="mt-2">
-                            <small className="text-muted">Selected: {formData.talent_scope.join(', ')}</small>
-                          </div>
-                        )}
-                        {errors.talent_scope && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.talent_scope}
-                          </div>
-                        )}
-                      </Form.Group>
-</Col>
-                  
                         {/* Date of Birth (only for individual) */}
-                        {formData.user_type === 'individual' && (
+                        {formData.user_type === "individual" && (
                           <Col md={6}>
                             <Form.Group className="mb-3">
-                              <Form.Label className="form-label-custom">Date of Birth <span className="star">*</span></Form.Label>
+                              <Form.Label className="form-label-custom">
+                                Date of Birth <span className="star">*</span>
+                              </Form.Label>
                               <Form.Control
                                 type="date"
                                 name="date_of_birth"
@@ -1957,15 +2261,20 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 max={today} // Prevent future dates
                                 className="form-control-custom"
                               />
-                              <Form.Control.Feedback type="invalid" className='val-error'>
+                              <Form.Control.Feedback
+                                type="invalid"
+                                className="val-error"
+                              >
                                 {errors.date_of_birth}
                               </Form.Control.Feedback>
                             </Form.Group>
                           </Col>
                         )}
-                        <Col md={formData.user_type === 'individual' ? 6 : 12}>
+                        <Col md={formData.user_type === "individual" ? 6 : 12}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Phone Number<span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Phone Number<span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="phone"
@@ -1976,7 +2285,10 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               maxLength={10}
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.phone}
                             </Form.Control.Feedback>
                             {/* Display phone number already in use message below the phone field */}
@@ -1987,128 +2299,157 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                             )}
                           </Form.Group>
                         </Col>
-                     
- <Col lg={6} md={6} sm={12}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Social Media Links </Form.Label>
-                        {formData.social_media_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
-                            <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handleSocialMediaLinkChange(index, e.target.value)}
-                              placeholder=" https://www.instagram.com/"
-                              className="form-control-custom"
-                            />
-                            {formData.social_media_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removeSocialMediaLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addSocialMediaLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.social_media_links && typeof errors.social_media_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.social_media_links}
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
- <Col lg={6} md={6} sm={12}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Additional Links</Form.Label>
-                        {formData.additional_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
-                            <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handleAdditionalLinkChange(index, e.target.value)}
-                              isInvalid={!!getLinkError('additional_links', index)}
-                              placeholder="https://example.com/additional"
-                              className="form-control-custom"
-                            />
-                            {formData.additional_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removeAdditionalLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addAdditionalLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.additional_links && typeof errors.additional_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.additional_links}
-                          </div>
-                        )}
-                      </Form.Group>
-</Col>
-<Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Portfolio Links</Form.Label>
-                        {formData.portfolio_links.map((link, index) => (
-                          <div key={index} className="d-flex mb-2">
-                            <Form.Control
-                              type="url"
-                              value={link}
-                              onChange={(e) => handlePortfolioLinkChange(index, e.target.value)}
-                              isInvalid={!!getLinkError('portfolio_links', index)}
-                              placeholder="https://example.com/portfolio"
-                              className="form-control-custom"
-                            />
-                            {formData.portfolio_links.length > 1 && (
-                              <Button
-                                variant="outline-danger"
-                                className="ms-2"
-                                onClick={() => removePortfolioLink(index)}
-                              >
-                                ×
-                              </Button>
-                            )}
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline-primary link-add"
-                          size="sm"
-                          onClick={addPortfolioLink}
-                          className="mt-2"
-                        >
-                          + Add Another Link
-                        </Button>
-                        {errors.portfolio_links && typeof errors.portfolio_links === 'string' && (
-                          <div className="val-error mt-1 text-danger">
-                            {errors.portfolio_links}
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
 
-                     
-                          <Col md={4} lg={6}>
+                        <Col lg={6} md={6} sm={12}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">Country <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              Social Media Links{" "}
+                            </Form.Label>
+                            {formData.social_media_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-2">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) =>
+                                    handleSocialMediaLinkChange(
+                                      index,
+                                      e.target.value,
+                                    )
+                                  }
+                                  placeholder=" https://www.instagram.com/"
+                                  className="form-control-custom"
+                                />
+                                {formData.social_media_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    className="ms-2"
+                                    onClick={() => removeSocialMediaLink(index)}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addSocialMediaLink}
+                              className="mt-2"
+                            >
+                              + Add Another Link
+                            </Button>
+                            {errors.social_media_links &&
+                              typeof errors.social_media_links === "string" && (
+                                <div className="val-error mt-1 text-danger">
+                                  {errors.social_media_links}
+                                </div>
+                              )}
+                          </Form.Group>
+                        </Col>
+                        <Col lg={6} md={6} sm={12}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Additional Links
+                            </Form.Label>
+                            {formData.additional_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-2">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) =>
+                                    handleAdditionalLinkChange(
+                                      index,
+                                      e.target.value,
+                                    )
+                                  }
+                                  isInvalid={
+                                    !!getLinkError("additional_links", index)
+                                  }
+                                  placeholder="https://example.com/additional"
+                                  className="form-control-custom"
+                                />
+                                {formData.additional_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    className="ms-2"
+                                    onClick={() => removeAdditionalLink(index)}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addAdditionalLink}
+                              className="mt-2"
+                            >
+                              + Add Another Link
+                            </Button>
+                            {errors.additional_links &&
+                              typeof errors.additional_links === "string" && (
+                                <div className="val-error mt-1 text-danger">
+                                  {errors.additional_links}
+                                </div>
+                              )}
+                          </Form.Group>
+                        </Col>
+                        <Col lg={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Portfolio Links
+                            </Form.Label>
+                            {formData.portfolio_links.map((link, index) => (
+                              <div key={index} className="d-flex mb-2">
+                                <Form.Control
+                                  type="url"
+                                  value={link}
+                                  onChange={(e) =>
+                                    handlePortfolioLinkChange(
+                                      index,
+                                      e.target.value,
+                                    )
+                                  }
+                                  isInvalid={
+                                    !!getLinkError("portfolio_links", index)
+                                  }
+                                  placeholder="https://example.com/portfolio"
+                                  className="form-control-custom"
+                                />
+                                {formData.portfolio_links.length > 1 && (
+                                  <Button
+                                    variant="outline-danger"
+                                    className="ms-2"
+                                    onClick={() => removePortfolioLink(index)}
+                                  >
+                                    ×
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline-primary link-add"
+                              size="sm"
+                              onClick={addPortfolioLink}
+                              className="mt-2"
+                            >
+                              + Add Another Link
+                            </Button>
+                            {errors.portfolio_links &&
+                              typeof errors.portfolio_links === "string" && (
+                                <div className="val-error mt-1 text-danger">
+                                  {errors.portfolio_links}
+                                </div>
+                              )}
+                          </Form.Group>
+                        </Col>
+
+                        <Col md={4} lg={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Country <span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="country"
@@ -2118,15 +2459,19 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="Country"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.country}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                                              <Col md={4} lg={6}>
-
+                        <Col md={4} lg={6}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">State <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              State <span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="state"
@@ -2136,14 +2481,19 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="State"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.state}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                      <Col md={4} lg={6}>
+                        <Col md={4} lg={6}>
                           <Form.Group className="mb-3">
-                            <Form.Label className="form-label-custom">City <span className="star">*</span></Form.Label>
+                            <Form.Label className="form-label-custom">
+                              City <span className="star">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="city"
@@ -2153,98 +2503,138 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                               placeholder="City"
                               className="form-control-custom"
                             />
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors.city}
                             </Form.Control.Feedback>
                           </Form.Group>
                         </Col>
-                   
-<Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Address <span className="star">*</span></Form.Label>
-                        <Form.Control
-                          type="text"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          isInvalid={!!errors.address}
-                          placeholder="Enter your full address"
-                          className="form-control-custom"
-                        />
-                        <Form.Control.Feedback type="invalid" className='val-error'>
-                          {errors.address}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                      </Col>
-  <Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Introduction <span className="star">*</span></Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          rows={4}
-                          name="introduction"
-                          value={formData.introduction}
-                          onChange={handleChange}
-                          isInvalid={!!errors.introduction}
-                          placeholder={formData.user_type === 'individual' 
-                            ? "Tell us about yourself, your experience, and what you hope to achieve..."
-                            : "Tell us about your organization, its mission, and what you hope to achieve..."
-                          }
-                          className="form-control-custom"
-                        />
-                        <div className="d-flex justify-content-between">
-                          <Form.Control.Feedback type="invalid" className='val-error'>
-                            {errors.introduction}
-                          </Form.Control.Feedback>
-                          <small className={`text-muted ${errors.introduction ? 'mt-4' : ''}`}>
-                            {formData.introduction.length}/500 characters
-                          </small>
-                        </div>
-                      </Form.Group>
-</Col>
-                      {/* Certificate Selection and Upload */}
-                      <Col lg={6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label className="form-label-custom">Certificates</Form.Label>
-                        <Dropdown autoClose="outside">
-                          <Dropdown.Toggle variant="" id="certificate-dropdown" className="dropdown-custom">
-                            Select Certificates to Upload
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            {certificateOptions.map((option, index) => (
-                              <Dropdown.Item key={index} as="div">
-                                <Form.Check
-                                  type="checkbox"
-                                  id={`certificate-${index}`}
-                                  label={option.label}
-                                  checked={formData.selected_certificates.includes(option.id)}
-                                  onChange={() => handleCertificateSelection(option.id)}
-                                />
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                        {formData.selected_certificates.length > 0 && (
-                          <div className="mt-2">
-                            <small className="text-muted">Selected: {formData.selected_certificates.map(id => 
-                              certificateOptions.find(option => option.id === id)?.label
-                            ).join(', ')}</small>
-                          </div>
-                        )}
-                      </Form.Group>
-                      </Col>
- </Row>
+
+                        <Col lg={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Address <span className="star">*</span>
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              name="address"
+                              value={formData.address}
+                              onChange={handleChange}
+                              isInvalid={!!errors.address}
+                              placeholder="Enter your full address"
+                              className="form-control-custom"
+                            />
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
+                              {errors.address}
+                            </Form.Control.Feedback>
+                          </Form.Group>
+                        </Col>
+                        <Col lg={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Introduction <span className="star">*</span>
+                            </Form.Label>
+                            <Form.Control
+                              as="textarea"
+                              rows={4}
+                              name="introduction"
+                              value={formData.introduction}
+                              onChange={handleChange}
+                              isInvalid={!!errors.introduction}
+                              placeholder={
+                                formData.user_type === "individual"
+                                  ? "Tell us about yourself, your experience, and what you hope to achieve..."
+                                  : "Tell us about your organization, its mission, and what you hope to achieve..."
+                              }
+                              className="form-control-custom"
+                            />
+                            <div className="d-flex justify-content-between">
+                              <Form.Control.Feedback
+                                type="invalid"
+                                className="val-error"
+                              >
+                                {errors.introduction}
+                              </Form.Control.Feedback>
+                              <small
+                                className={`text-muted ${errors.introduction ? "mt-4" : ""}`}
+                              >
+                                {formData.introduction.length}/500 characters
+                              </small>
+                            </div>
+                          </Form.Group>
+                        </Col>
+                        {/* Certificate Selection and Upload */}
+                        <Col lg={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label className="form-label-custom">
+                              Certificates
+                            </Form.Label>
+                            <Dropdown autoClose="outside">
+                              <Dropdown.Toggle
+                                variant=""
+                                id="certificate-dropdown"
+                                className="dropdown-custom"
+                              >
+                                Select Certificates to Upload
+                              </Dropdown.Toggle>
+                              <Dropdown.Menu>
+                                {certificateOptions.map((option, index) => (
+                                  <Dropdown.Item key={index} as="div">
+                                    <Form.Check
+                                      type="checkbox"
+                                      id={`certificate-${index}`}
+                                      label={option.label}
+                                      checked={formData.selected_certificates.includes(
+                                        option.id,
+                                      )}
+                                      onChange={() =>
+                                        handleCertificateSelection(option.id)
+                                      }
+                                    />
+                                  </Dropdown.Item>
+                                ))}
+                              </Dropdown.Menu>
+                            </Dropdown>
+                            {formData.selected_certificates.length > 0 && (
+                              <div className="mt-2">
+                                <small className="text-muted">
+                                  Selected:{" "}
+                                  {formData.selected_certificates
+                                    .map(
+                                      (id) =>
+                                        certificateOptions.find(
+                                          (option) => option.id === id,
+                                        )?.label,
+                                    )
+                                    .join(", ")}
+                                </small>
+                              </div>
+                            )}
+                          </Form.Group>
+                        </Col>
+                      </Row>
                       {/* Certificate File Uploads */}
-                      {formData.selected_certificates.map(certificateId => {
-                        const option = certificateOptions.find(opt => opt.id === certificateId);
+                      {formData.selected_certificates.map((certificateId) => {
+                        const option = certificateOptions.find(
+                          (opt) => opt.id === certificateId,
+                        );
                         return (
                           <Form.Group key={certificateId} className="mb-3">
-                            <Form.Label className="form-label-custom">{option.label} *</Form.Label>
+                            <Form.Label className="form-label-custom">
+                              {option.label} *
+                            </Form.Label>
                             <div className="d-flex align-items-center">
                               <Form.Control
                                 type="file"
                                 ref={certificateFileRefs[certificateId]}
-                                onChange={(e) => handleCertificateFileChange(certificateId, e)}
+                                onChange={(e) =>
+                                  handleCertificateFileChange(certificateId, e)
+                                }
                                 isInvalid={!!errors[certificateId]}
                                 accept="image/*,application/pdf"
                                 className="me-2 form-control-custom"
@@ -2253,16 +2643,22 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                                 <Button
                                   variant="outline-danger"
                                   size="sm"
-                                  onClick={() => removeCertificateFile(certificateId)}
+                                  onClick={() =>
+                                    removeCertificateFile(certificateId)
+                                  }
                                 >
                                   Remove
                                 </Button>
                               )}
                             </div>
                             <Form.Text className="text-muted">
-                              Upload certificate file (JPEG, JPG, PNG, or PDF, max 2MB)
+                              Upload certificate file (JPEG, JPG, PNG, or PDF,
+                              max 2MB)
                             </Form.Text>
-                            <Form.Control.Feedback type="invalid" className='val-error'>
+                            <Form.Control.Feedback
+                              type="invalid"
+                              className="val-error"
+                            >
                               {errors[certificateId]}
                             </Form.Control.Feedback>
                           </Form.Group>
@@ -2279,149 +2675,182 @@ const Registration = ({ email: propEmail, onRegistrationSuccess, fromEvent = fal
                           isInvalid={!!errors.agreeTerms}
                           label={
                             <span>
-                              I agree with the{' '}
-                              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">
+                              I agree with the{" "}
+                              <a
+                                href="/terms"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary text-decoration-underline"
+                              >
                                 Terms and Conditions
-                              </a>
-                              {' '}and{' '}
-                              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary text-decoration-underline">
+                              </a>{" "}
+                              and{" "}
+                              <a
+                                href="/privacy"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary text-decoration-underline"
+                              >
                                 Privacy Policy
                               </a>
                             </span>
                           }
                           className="terms-checkbox"
                         />
-                        <Form.Control.Feedback type="invalid" className='val-error'>
+                        <Form.Control.Feedback
+                          type="invalid"
+                          className="val-error"
+                        >
                           {errors.agreeTerms}
                         </Form.Control.Feedback>
                       </Form.Group>
-                      
+
                       <div className="d-flex justify-content-end mt-4">
-                        <Button 
-                          variant="primary" 
+                        <Button
+                          variant="primary"
                           type="submit"
                           disabled={isSubmitting || submitSuccess}
                           className="btn-custom-primary"
                         >
-                          {isSubmitting ? 'Submitting...' : 'Submit'}
+                          {isSubmitting ? "Submitting..." : "Submit"}
                         </Button>
                       </div>
                     </Form>
                   </div>
                 )
+              ) : // Email Verification Form
+              verificationSuccess ? (
+                // Show Registration Preview with Download/Print buttons after successful verification
+                <div className="preview-container">
+                  <div
+                    className="alert alert-success mb-4 no-print"
+                    role="alert"
+                  >
+                    <i className="bi bi-check-circle-fill me-2"></i>
+                    <strong>Email Verified Successfully!</strong> Your
+                    registration is complete. You can now download or print your
+                    registration preview.
+                  </div>
+
+                  <RegistrationPreview
+                    formData={formData}
+                    certificateUrls={certificateUrls}
+                    alreadyRegisteredMessage={alreadyRegisteredMessage}
+                    phoneAlreadyRegisteredMessage={
+                      phoneAlreadyRegisteredMessage
+                    }
+                    isVerified={true} // User is verified
+                    userId={userId}
+                  />
+
+                  <div className="preview-actions mt-4 text-end no-print">
+                    <Button
+                      variant="outline-secondary"
+                      onClick={handlePrintFallback}
+                      className="me-2 no-print"
+                    >
+                      <i className="bi bi-printer me-2"></i>Print Preview
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handlePrintPreview}
+                      className="btn-custom-primary no-print"
+                    >
+                      <i className="bi bi-download me-2"></i>Download as PDF
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 text-center no-print">
+                    <Button
+                      variant="secondary" className="btn-go-back-btn"
+                      onClick={handleRegistrationComplete}
+                    >
+                      {fromEvent ? "Continue to Events" : "Go to Login"}
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                // Email Verification Form
-                verificationSuccess ? (
-                  // Show Registration Preview with Download/Print buttons after successful verification
-                  <div className="preview-container">
-                    <div className="alert alert-success mb-4 no-print" role="alert">
-                      <i className="bi bi-check-circle-fill me-2"></i>
-                      <strong>Email Verified Successfully!</strong> Your registration is complete. You can now download or print your registration preview.
-                    </div>
-                    
-                    <RegistrationPreview 
-                      formData={formData} 
-                      certificateUrls={certificateUrls}
-                      alreadyRegisteredMessage={alreadyRegisteredMessage}
-                      phoneAlreadyRegisteredMessage={phoneAlreadyRegisteredMessage}
-                      isVerified={true} // User is verified
-                      userId={userId}
-                    />
-                    
-                    <div className="preview-actions mt-4 text-end no-print">
-                      <Button 
-                        variant="outline-secondary" 
-                        onClick={handlePrintFallback} 
-                        className="me-2 no-print"
-                      >
-                        <i className="bi bi-printer me-2"></i>Print Preview
-                      </Button>
-                      <Button 
-                        variant="primary" 
-                        onClick={handlePrintPreview} 
-                        className="btn-custom-primary no-print"
-                      >
-                        <i className="bi bi-download me-2"></i>Download as PDF
-                      </Button>
-                    </div>
-                    
-                    <div className="mt-4 text-center no-print">
-                      <Button 
-                        variant="secondary" 
-                        onClick={handleRegistrationComplete}
-                      >
-                        {fromEvent ? 'Continue to Events' : 'Go to Login'}
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="verification-form-container p-4">
-                    <h3 className="mb-4 text-center">Email Verification</h3>
-                    <Form onSubmit={handleVerificationSubmit}>
-                      {apiError && <Alert variant="danger">{apiError}</Alert>}
-                      {resendSuccess && <Alert variant="success">Verification code sent successfully!</Alert>}
-                      
-                      <div className="text-center mb-4">
-                        <div className="verification-icon mb-3">
-                          <i className="bi bi-envelope-check" style={{ fontSize: '4rem', color: '#0d6efd' }}></i>
-                        </div>
-                        <h4 className="mb-3">Verify Your Email</h4>
-                        <p className="text-muted">
-                          We've sent a verification code to <strong>{registeredEmail}</strong>
-                        </p>
+                <div className="verification-form-container p-4">
+                  <h3 className="mb-4 text-center">Email Verification</h3>
+                  <Form onSubmit={handleVerificationSubmit}>
+                    {apiError && <Alert variant="danger">{apiError}</Alert>}
+                    {resendSuccess && (
+                      <Alert variant="success">
+                        Verification code sent successfully!
+                      </Alert>
+                    )}
+
+                    <div className="text-center mb-4">
+                      <div className="verification-icon mb-3">
+                        <i
+                          className="bi bi-envelope-check"
+                          style={{ fontSize: "4rem", color: "#0d6efd" }}
+                        ></i>
                       </div>
-                      
-                      <Form.Group className="mb-4">
-                        <Form.Label className="form-label-custom">Verification Code *</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={verificationCode}
-                          onChange={handleVerificationCodeChange}
-                          isInvalid={!!errors.verificationCode}
-                          placeholder="Enter 6-digit code"
-                          maxLength={6}
-                          className="text-center form-control-custom verification-code-input"
-                          style={{ fontSize: '1.5rem', letterSpacing: '0.5rem' }}
-                        />
-                        <Form.Control.Feedback type="invalid" className='val-error'>
-                          {errors.verificationCode}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                      
-                      <div className="text-center mb-4">
-                        <p className="text-muted">
-                          Didn't receive the code?{' '}
-                          <Button 
-                            variant="link" 
-                            className="p-0 resend-code-btn" 
-                            onClick={handleResendCode}
-                            disabled={isSubmitting || countdown > 0}
-                          >
-                            {countdown > 0 ? `Resend Code (${countdown}s)` : 'Resend Code'}
-                          </Button>
-                        </p>
-                      </div>
-                      
-                      <div className="d-flex justify-content-between">
-                        <Button 
-                          variant="secondary" 
-                          onClick={() => setCurrentStep('registration')} 
-                          className="btn-custom-secondary"
+                      <h4 className="mb-3">Verify Your Email</h4>
+                      <p className="text-muted">
+                        We've sent a verification code to{" "}
+                        <strong>{registeredEmail}</strong>
+                      </p>
+                    </div>
+
+                    <Form.Group className="mb-4">
+                      <Form.Label className="form-label-custom">
+                        Verification Code *
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={verificationCode}
+                        onChange={handleVerificationCodeChange}
+                        isInvalid={!!errors.verificationCode}
+                        placeholder="Enter 6-digit code"
+                        maxLength={6}
+                        className="text-center form-control-custom verification-code-input"
+                        style={{ fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                      />
+                      <Form.Control.Feedback
+                        type="invalid"
+                        className="val-error"
+                      >
+                        {errors.verificationCode}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+
+                    <div className="text-center mb-4">
+                      <p className="text-muted">
+                        Didn't receive the code?{" "}
+                        <Button
+                          variant="link"
+                          className="p-0 resend-code-btn"
+                          onClick={handleResendCode}
+                          disabled={isSubmitting || countdown > 0}
                         >
-                          Back
+                          {countdown > 0
+                            ? `Resend Code (${countdown}s)`
+                            : "Resend Code"}
                         </Button>
-                        <Button 
-                          variant="primary" 
-                          onClick={handleVerificationSubmit} 
-                          disabled={isSubmitting || verificationSuccess}
-                          className="btn-custom-primary"
-                        >
-                          {isSubmitting ? 'Verifying...' : 'Verify'}
-                        </Button>
-                      </div>
-                    </Form>
-                  </div>
-                )
+                      </p>
+                    </div>
+
+                    <div className="d-flex justify-content-between">
+                      <Button
+                        variant="secondary"
+                        onClick={() => setCurrentStep("registration")}
+                        className="btn-custom-secondary"
+                      >
+                        Back
+                      </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleVerificationSubmit}
+                        disabled={isSubmitting || verificationSuccess}
+                        className="btn-custom-primary"
+                      >
+                        {isSubmitting ? "Verifying..." : "Verify"}
+                      </Button>
+                    </div>
+                  </Form>
+                </div>
               )}
             </div>
           </section>
