@@ -17,7 +17,7 @@ import NavBar from "./componets/navbar/NavBar";
 import AboutUs from "./componets/pages/AboutUs"; 
 
 
-import RegistrationModal from "./componets/pages/RegistrationModal";
+
 import DashBoardHeader from "./componets/event_panel/DashBoardHeader";
 import Dashboard from "./componets/event_panel/DashBoard";
 import Login from "./componets/login/Login";
@@ -113,7 +113,7 @@ function App() {
             <Route path="/DashBoardHeader" element={<DashBoardHeader />} />
             <Route path="/Login" element={<Login />} />
         
-             <Route path="/RegistrationModal" element={<RegistrationModal />} />
+            
              <Route path="/Events" element={<Events />} />
              <Route path="/Contact" element={<Contact />} />
              <Route path="/ForgotPassword" element={<ForgotPassword />} />
