@@ -248,7 +248,7 @@ function Contact() {
                     value={formData.full_name}
                     onChange={handleChange}
                     isInvalid={!!errors.full_name}
-                    placeholder="name"
+                    placeholder="Enter Name"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.full_name}
@@ -263,7 +263,7 @@ function Contact() {
                     value={formData.email}
                     onChange={handleChange}
                     isInvalid={!!errors.email}
-                    placeholder="email"
+                    placeholder="Enter Email ID"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.email}
@@ -278,7 +278,7 @@ function Contact() {
                     value={formData.mobile_number}
                     onChange={handleChange}
                     isInvalid={!!errors.mobile_number}
-                    placeholder="9876543210"
+                    placeholder="Enter Number"
                   />
                   <Form.Control.Feedback type="invalid">
                     {errors.mobile_number}
@@ -293,7 +293,7 @@ function Contact() {
                     value={formData.message}
                     onChange={handleChange}
                     isInvalid={!!errors.message}
-                    placeholder="I would like to know more about your services."
+                    placeholder="Message"
                     rows={5}
                   />
                   <Form.Control.Feedback type="invalid">
@@ -352,7 +352,8 @@ function Contact() {
           max-height: 150px;
           object-fit: contain;
        background-color: black;
-    border-radius: 72px;
+       border-radius: 77px;
+   
         }
         
         .company-name {

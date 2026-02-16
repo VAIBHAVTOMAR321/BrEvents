@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import "../../assets/css/mainstyle.css"
 import { Link } from 'react-router-dom';
-import EventLogo from '../../assets/images/br-event-logo.png'
+import EventLogo from '../../assets/images/br-event-logo.png' // Keep as fallback
 import { Button, Container } from 'react-bootstrap';
 import { FaPhone } from "react-icons/fa6";
 import { FaFacebook, FaTwitter, FaWhatsapp, FaInstagram, FaLinkedin, FaGlobe, FaEnvelope } from 'react-icons/fa';
@@ -75,6 +75,12 @@ function NavBar() {
   if (error) {
     return <div className="alert alert-danger">{error}</div>;
   }
+
+  // Get the first company's logo or use fallback
+  // Construct full URL for the logo from API response
+  const companyLogo = companies.length > 0 && companies[0].logo 
+    ? `https://mahadevaaya.com/eventmanagement/eventmanagement_backend${companies[0].logo}` 
+    : EventLogo;
 
   return (
     <>
@@ -153,8 +159,16 @@ function NavBar() {
         >
           <div className="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-end">
             <Link to="/" className="logo d-flex align-items-center me-auto">
-              <img src={EventLogo} alt="logo" className="logo-wecd" />
-              <h1 className="sitename">Br Events</h1>
+              <img 
+                src={companyLogo} 
+                alt="logo" 
+                className="logo-wecd" 
+                onError={(e) => {
+                  e.target.onerror = null; 
+                  e.target.src = EventLogo; // Fallback to static logo if API logo fails to load
+                }}
+              />
+              <h1 className="sitename">BR Infotainment</h1>
             </Link>
 
             <nav id="navmenu" className={`navmenu ${isMenuOpen ? 'navmenu-active' : ''}`}>

@@ -5,7 +5,7 @@ import DashBoardHeader from "../DashBoardHeader";
 import LeftNav from "../LeftNav";
 import { useAuthFetch } from "../../context/AuthFetch";
 
-const AddPost = () => {
+const AddGallery = () => {
   const navigate = useNavigate();
   const authFetch = useAuthFetch();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -15,17 +15,15 @@ const AddPost = () => {
   // Form state
   const [formData, setFormData] = useState({
     title: "",
-    summary: "",
     description: "",
-    category: "",
-    video_url: "",
-    status: "draft"
+    image: null
   });
   
   // UI state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Check device width
   useEffect(() => {
@@ -51,6 +49,24 @@ const AddPost = () => {
     });
   };
 
+  // Handle image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({
+        ...formData,
+        image: file
+      });
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,37 +75,40 @@ const AddPost = () => {
     setSuccess("");
     
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+      
       const response = await authFetch(
-        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/blogs/",
+        "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/gallery-items/",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          body: formDataToSend,
         }
       );
       
       const data = await response.json();
       
       if (data.success) {
-        setSuccess("Post added successfully!");
+        setSuccess("Gallery item added successfully!");
         // Reset form
         setFormData({
           title: "",
-          summary: "",
           description: "",
-          category: "",
-          video_url: "",
-          status: "draft"
+          image: null
         });
+        setImagePreview(null);
         
         // Optionally redirect after a delay
         setTimeout(() => {
-          navigate("/ManagePosts"); // Changed to posts list page
+          navigate("/ManageGallery"); // Changed to gallery list page
         }, 2000);
       } else {
-        setError(data.message || "Failed to add post");
+        setError(data.message || "Failed to add gallery item");
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
@@ -98,28 +117,6 @@ const AddPost = () => {
       setLoading(false);
     }
   };
-
-  // Categories options
-  const categoryOptions = [
-    "Travel",
-    "Food",
-    "Lifestyle",
-    "Technology",
-    "Education",
-    "Entertainment",
-    "Sports",
-    "Politics",
-    "Business",
-    "Health",
-    "Other"
-  ];
-
-  // Status options
-  const statusOptions = [
-    { value: "draft", label: "Draft" },
-    { value: "published", label: "Published" },
-    { value: "archived", label: "Archived" }
-  ];
 
   return (
     <>
@@ -137,7 +134,7 @@ const AddPost = () => {
           <DashBoardHeader toggleSidebar={toggleSidebar} />
 
           <Container fluid className="dashboard-body dashboard-main-container">
-            <h1 className="page-title">Add New Post</h1>
+            <h1 className="page-title">Add Gallery Item</h1>
             
             <Row className="justify-content-center">
               <Col md={12} lg={12}>
@@ -159,17 +156,6 @@ const AddPost = () => {
                         />
                       </Form.Group>
                       
-                      <Form.Group className="mb-3" controlId="summary">
-                        <Form.Label>Summary</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="Enter summary"
-                          name="summary"
-                          value={formData.summary}
-                          onChange={handleChange}
-                        />
-                      </Form.Group>
-                      
                       <Form.Group className="mb-3" controlId="description">
                         <Form.Label>Description</Form.Label>
                         <Form.Control
@@ -182,46 +168,23 @@ const AddPost = () => {
                         />
                       </Form.Group>
                       
-                      <Form.Group className="mb-3" controlId="category">
-                        <Form.Label>Category</Form.Label>
-                        <Form.Select
-                          name="category"
-                          value={formData.category}
-                          onChange={handleChange}
-                        >
-                          <option value="">Select a category</option>
-                          {categoryOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      </Form.Group>
-                      
-                      <Form.Group className="mb-3" controlId="video_url">
-                        <Form.Label>Video URL</Form.Label>
+                      <Form.Group className="mb-4" controlId="image">
+                        <Form.Label>Image</Form.Label>
                         <Form.Control
-                          type="url"
-                          placeholder="Enter video URL"
-                          name="video_url"
-                          value={formData.video_url}
-                          onChange={handleChange}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
                         />
-                      </Form.Group>
-                      
-                      <Form.Group className="mb-4" controlId="status">
-                        <Form.Label>Status</Form.Label>
-                        <Form.Select
-                          name="status"
-                          value={formData.status}
-                          onChange={handleChange}
-                        >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </Form.Select>
+                        {imagePreview && (
+                          <div className="mt-3">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="img-fluid rounded"
+                              style={{ maxHeight: "200px" }}
+                            />
+                          </div>
+                        )}
                       </Form.Group>
                       
                       <div className="d-grid gap-2 d-flex ">
@@ -231,11 +194,11 @@ const AddPost = () => {
                           disabled={loading}
                           className="btn-primary"
                         >
-                          {loading ? "Submitting..." : "Add Post"}
+                          {loading ? "Submitting..." : "Add Gallery Item"}
                         </Button>
                         <Button
                           variant="outline-secondary"
-                          onClick={() => navigate("/ManagePosts")}
+                          onClick={() => navigate("/gallery-list")}
                         >
                           Cancel
                         </Button>
@@ -252,4 +215,4 @@ const AddPost = () => {
   );
 };
 
-export default AddPost;
+export default AddGallery;

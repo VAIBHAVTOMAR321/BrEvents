@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Alert, Row, Col, Card } from "react-bootstrap";
+import { Container, Form, Button, Alert, Row, Col, Card, Modal } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import LeftNav from "../../LeftNav";
 import DashBoardHeader from "../../DashBoardHeader";
-import { FaCalendarAlt, FaMapMarkerAlt, FaInfoCircle, FaSave } from "react-icons/fa";
+import { FaCalendarAlt, FaMapMarkerAlt, FaInfoCircle, FaSave, FaImage, FaLink, FaUpload } from "react-icons/fa";
 import { useAuthFetch } from "../../../context/AuthFetch";
 
 const AddEvent = () => {
@@ -15,6 +15,8 @@ const AddEvent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageInputType, setImageInputType] = useState('file'); // 'file' or 'url'
 
   // Form state
   const [formData, setFormData] = useState({
@@ -22,8 +24,14 @@ const AddEvent = () => {
     description: "",
     event_date_time: "",
     venue: "",
-    event_type: ""
+    event_type: "",
+    tentative_date: null,
+    image: "" // Will store either file or URL
   });
+  
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
 
   // Status fields (calculated based on event date time)
   const [eventStatus, setEventStatus] = useState({
@@ -92,6 +100,78 @@ const AddEvent = () => {
     }
   };
 
+  // Handle image file change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        setValidationErrors(prev => ({
+          ...prev,
+          image: "Please select a valid image file"
+        }));
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setValidationErrors(prev => ({
+          ...prev,
+          image: "Image size should not exceed 5MB"
+        }));
+        return;
+      }
+      
+      setSelectedImage(file);
+      setFormData(prev => ({ ...prev, image: file }));
+      
+      // Create image preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      
+      // Clear validation error
+      if (validationErrors.image) {
+        setValidationErrors(prev => ({
+          ...prev,
+          image: ""
+        }));
+      }
+    }
+  };
+
+  // Handle image URL change
+  const handleImageUrlChange = (e) => {
+    const url = e.target.value;
+    setImageUrl(url);
+    setFormData(prev => ({ ...prev, image: url }));
+    
+    // Create preview for URL
+    if (url) {
+      setImagePreview(url);
+    } else {
+      setImagePreview(null);
+    }
+    
+    // Clear validation error
+    if (validationErrors.image) {
+      setValidationErrors(prev => ({
+        ...prev,
+        image: ""
+      }));
+    }
+  };
+
+  // Remove image
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImageUrl("");
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, image: "" }));
+  };
+
   // Validate form
   const validateForm = () => {
     const errors = {};
@@ -137,28 +217,58 @@ const AddEvent = () => {
     setSuccess("");
     
     try {
-      // Create form data for API submission
-      const submitData = new FormData();
-      submitData.append('event_name', formData.event_name);
-      submitData.append('description', formData.description);
-      submitData.append('event_date_time', formData.event_date_time);
-      submitData.append('venue', formData.venue);
-      
-      // Only add event_type if it has a value
-      if (formData.event_type) {
-        submitData.append('event_type', formData.event_type);
+      // Prepare payload based on image type
+      let payload;
+      let headers = {};
+
+      if (selectedImage) {
+        // If image is a file, use FormData
+        payload = new FormData();
+        payload.append('event_name', formData.event_name);
+        payload.append('description', formData.description);
+        payload.append('event_date_time', formData.event_date_time);
+        payload.append('venue', formData.venue);
+        
+        // Only add event_type if it has a value
+        if (formData.event_type) {
+          payload.append('event_type', formData.event_type);
+        }
+        
+        // Only add tentative_date if it has a value
+        if (formData.tentative_date) {
+          payload.append('tentative_date', formData.tentative_date);
+        }
+        
+        // Add image file
+        payload.append('image', selectedImage);
+        
+        // Add status fields
+        payload.append('is_past', eventStatus.is_past);
+        payload.append('is_present', eventStatus.is_present);
+        payload.append('is_upcoming', eventStatus.is_upcoming);
+      } else {
+        // If image is a URL or no image, use JSON
+        headers['Content-Type'] = 'application/json';
+        payload = JSON.stringify({
+          event_name: formData.event_name,
+          description: formData.description,
+          event_date_time: formData.event_date_time,
+          venue: formData.venue,
+          event_type: formData.event_type || null,
+          tentative_date: formData.tentative_date || null,
+          image: formData.image || null, // URL or null
+          is_past: eventStatus.is_past,
+          is_present: eventStatus.is_present,
+          is_upcoming: eventStatus.is_upcoming
+        });
       }
-      
-      // Add status fields (calculated based on event date time)
-      submitData.append('is_past', eventStatus.is_past);
-      submitData.append('is_present', eventStatus.is_present);
-      submitData.append('is_upcoming', eventStatus.is_upcoming);
       
       const response = await authFetch(
         'https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/',
         {
           method: 'POST',
-          body: submitData
+          headers: headers,
+          body: payload
         }
       );
       
@@ -166,14 +276,22 @@ const AddEvent = () => {
       
       if (response.ok) {
         setSuccess("Event created successfully!");
+        
         // Reset form
         setFormData({
           event_name: "",
           description: "",
           event_date_time: "",
           venue: "",
-          event_type: ""
+          event_type: "",
+          tentative_date: null,
+          image: ""
         });
+        
+        // Reset image state
+        setSelectedImage(null);
+        setImageUrl("");
+        setImagePreview(null);
         
         // Reset status
         setEventStatus({
@@ -184,7 +302,7 @@ const AddEvent = () => {
         
         // Redirect after 2 seconds
         setTimeout(() => {
-          navigate('/ManageEvent'); // or your events list page
+          navigate('/ManageEvent');
         }, 2000);
       } else {
         setError(data.message || "Failed to create event. Please try again.");
@@ -332,6 +450,28 @@ const AddEvent = () => {
                       </Form.Group>
                     </Col>
 
+                    {/* Tentative Date */}
+                    <Col md={6} className="mb-3">
+                      <Form.Group>
+                        <Form.Label className="d-flex align-items-center">
+                          <FaCalendarAlt className="me-2 text-warning" />
+                          Tentative Date
+                        </Form.Label>
+                        <Form.Control
+                          type="date"
+                          name="tentative_date"
+                          value={formData.tentative_date || ""}
+                          onChange={handleChange}
+                          className="form-control-lg"
+                        />
+                        <Form.Text className="text-muted">
+                          Select a tentative date for the event (optional)
+                        </Form.Text>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Row>
                     {/* Event Type */}
                     <Col md={6} className="mb-3">
                       <Form.Group>
@@ -350,12 +490,99 @@ const AddEvent = () => {
                           <option value="workshop">Workshop</option>
                           <option value="seminar">Seminar</option>
                           <option value="webinar">Webinar</option>
-                          <option value="networking">Networking</option>
+                      
                           <option value="other">Other</option>
                         </Form.Select>
                         <Form.Text className="text-muted">
                           Select the type of event (optional)
                         </Form.Text>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Event Image */}
+                  <Row>
+                    <Col md={12} className="mb-4">
+                      <Form.Group>
+                        <Form.Label className="d-flex align-items-center justify-content-between">
+                          <span className="d-flex align-items-center">
+                            <FaImage className="me-2 text-warning" />
+                            Event Image
+                          </span>
+                         
+                        </Form.Label>
+                        
+                        {/* Image Input Type Display */}
+                        <div className="mb-2">
+                          <small className="text-muted">
+                            Current input type: <strong>{imageInputType === 'file' ? 'File Upload' : 'URL'}</strong>
+                          </small>
+                        </div>
+
+                        {/* Conditional Image Input */}
+                        {imageInputType === 'file' ? (
+                          <>
+                            <Form.Control
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              isInvalid={!!validationErrors.image}
+                              className="form-control-lg"
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {validationErrors.image}
+                            </Form.Control.Feedback>
+                            <Form.Text className="text-muted">
+                              Upload an event image (JPG, PNG, GIF up to 5MB)
+                            </Form.Text>
+                          </>
+                        ) : (
+                          <>
+                            <Form.Control
+                              type="url"
+                              placeholder="Enter image URL"
+                              value={imageUrl}
+                              onChange={handleImageUrlChange}
+                              isInvalid={!!validationErrors.image}
+                              className="form-control-lg"
+                            />
+                            <Form.Control.Feedback type="invalid">
+                              {validationErrors.image}
+                            </Form.Control.Feedback>
+                            <Form.Text className="text-muted">
+                              Enter a valid image URL (e.g., https://example.com/image.jpg)
+                            </Form.Text>
+                          </>
+                        )}
+                        
+                        {/* Image Preview */}
+                        {imagePreview && (
+                          <div className="mt-3">
+                            <div className="d-flex align-items-start">
+                              <div>
+                                <p className="mb-2 fw-bold">Image Preview:</p>
+                                <img 
+                                  src={imagePreview} 
+                                  alt="Event Preview" 
+                                  className="img-thumbnail" 
+                                  style={{ width: '200px', height: '150px', objectFit: 'cover' }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = 'https://via.placeholder.com/200x150?text=Invalid+Image';
+                                  }}
+                                />
+                              </div>
+                              <Button 
+                                variant="danger" 
+                                size="sm" 
+                                className="ms-3 mt-4"
+                                onClick={removeImage}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -453,10 +680,23 @@ const AddEvent = () => {
                       <p><strong>Venue:</strong> {formData.venue || 'Not specified'}</p>
                       <p><strong>Type:</strong> {formData.event_type ? formData.event_type.charAt(0).toUpperCase() + formData.event_type.slice(1) : 'Not specified'}</p>
                       <p><strong>Status:</strong> {getStatusBadge()}</p>
+                      {imagePreview && (
+                        <div>
+                          <p><strong>Image:</strong></p>
+                          <img 
+                            src={imagePreview} 
+                            alt="Event Preview" 
+                            className="img-thumbnail" 
+                            style={{ width: '200px', height: '133px', objectFit: 'cover' }}
+                          />
+                        </div>
+                      )}
                     </Col>
                     <Col md={6}>
                       <p><strong>Date & Time:</strong> {formData.event_date_time ? 
                         new Date(formData.event_date_time).toLocaleString() : 'Not specified'}</p>
+                      <p><strong>Tentative Date:</strong> {formData.tentative_date ? 
+                        new Date(formData.tentative_date).toLocaleDateString() : 'Not specified'}</p>
                       <p><strong>Description:</strong> {formData.description || 'Not specified'}</p>
                     </Col>
                   </Row>
@@ -466,6 +706,42 @@ const AddEvent = () => {
           </Container>
         </div>
       </div>
+
+      {/* Image Source Selection Modal */}
+      <Modal show={showImageModal} onHide={() => setShowImageModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Choose Image Source</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>How would you like to add an image to this event?</p>
+          <div className="d-grid gap-2">
+            <Button
+              variant="primary"
+              onClick={() => {
+                setImageInputType('file');
+                setShowImageModal(false);
+                removeImage();
+              }}
+              className="d-flex align-items-center justify-content-center"
+            >
+              <FaUpload className="me-2" />
+              Upload Image File
+            </Button>
+            <Button
+              variant="outline-primary"
+              onClick={() => {
+                setImageInputType('url');
+                setShowImageModal(false);
+                removeImage();
+              }}
+              className="d-flex align-items-center justify-content-center"
+            >
+              <FaLink className="me-2" />
+              Use Image URL
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };

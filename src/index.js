@@ -10,7 +10,7 @@ import { AuthProvider } from './componets/context/AuthContext';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter basename="/eventmanagement">
+    <BrowserRouter>
       <AuthProvider>
         <App />
       </AuthProvider>

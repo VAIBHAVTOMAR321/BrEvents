@@ -228,21 +228,23 @@ function AboutUs() {
                   />
                 </div>
 
-                <div className="mission-vision mt-4" data-aos="fade-up" data-aos-delay="400">
-                  {mission && (
-                    <div className="mission mb-4">
-                      <h3>{mission.title}</h3>
-                      <p>{mission.description}</p>
-                    </div>
-                  )}
+              <div className="mission-vision mt-4 grid grid-cols-1 md:grid-cols-2 gap-6" data-aos="fade-up" data-aos-delay="400">
+  {mission && (
+    <div className="mission">
+      {/* You can add card styling here if you want, like padding and a border */}
+      <h3>{mission.title}</h3>
+      <p>{mission.description}</p>
+    </div>
+  )}
 
-                  {vision && (
-                    <div className="vision">
-                      <h3>{vision.title}</h3>
-                      <p>{vision.description}</p>
-                    </div>
-                  )}
-                </div>
+  {vision && (
+    <div className="vision">
+      {/* And here for the vision card */}
+      <h3>{vision.title}</h3>
+      <p>{vision.description}</p>
+    </div>
+  )}
+</div>
               </div>
             </div>
           </div>

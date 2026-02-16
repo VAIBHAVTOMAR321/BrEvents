@@ -187,7 +187,7 @@ body {
     margin-bottom: 15px;
     font-weight: 600;
     position: relative;
-    padding-left: 15px;
+   
     color: #010608;
 }
 .services-list h5{
@@ -247,6 +247,18 @@ body {
 .Login-page h1{
   
 }
+
+
+/* Tablet and up */
+/* This rule will apply to screens 480px wide and smaller (most phones) */
+@media (max-width: 480px) {
+    .header .logo img {
+        max-height: 46px !important;
+        margin-right: 6px;
+        border-radius: 20px;
+    }
+}
+
 /* Mobile dropdown styles */
 @media (max-width: 991.98px) {
   .navmenu ul li.dropdown > ul {

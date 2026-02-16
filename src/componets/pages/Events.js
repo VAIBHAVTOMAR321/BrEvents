@@ -263,7 +263,7 @@ function Events() {
 
   // Improved date formatting function
   const formatDate = (dateString) => {
-    if (!dateString) return { day: 'N/A', monthYear: 'N/A' };
+    if (!dateString) return { day: 'N/A', monthYear: 'N/A', fullDate: 'N/A' };
     
     const date = new Date(dateString);
     const options = { day: 'numeric', month: 'short', year: 'numeric' };
@@ -272,7 +272,8 @@ function Events() {
     const parts = formattedDate.split(' ');
     return {
       day: parts[0],
-      monthYear: `${parts[1]} ${parts[2]}`
+      monthYear: `${parts[1]} ${parts[2]}`,
+      fullDate: formattedDate
     };
   };
 
@@ -356,17 +357,39 @@ function Events() {
             <div className="row section-title g-4">
                
               {filteredEvents.map((event, index) => {
-                const { day, monthYear } = formatDate(event.event_date_time);
+                const { day, monthYear, fullDate } = formatDate(event.event_date_time);
                 const time = formatTime(event.event_date_time);
                 const status = getStatusBadge(event);
                 const aosDelay = 200 + (index % 3) * 100;
+                
+                // Handle image URL - if image is null or undefined, use a placeholder
+                const imageUrl = event.image 
+                  ? `https://mahadevaaya.com/eventmanagement/${event.image}` 
+                  : `https://picsum.photos/seed/event${event.id}/400/250.jpg`;
+
+                // Format tentative date if exists
+                const tentativeDateInfo = event.tentative_date ? formatDate(event.tentative_date) : null;
 
                 return (
                   <div key={event.id} className="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay={aosDelay}>
                     <div className={`event-item ${status.className}`}>
-                      <div className="event-header">
+                      {/* Add image to the event card */}
+                      <div className="event-image">
+                        <img 
+                          src={imageUrl} 
+                          alt={event.event_name} 
+                          className="img-fluid"
+                          onError={(e) => {
+                            // Fallback image if the primary image fails to load
+                            e.target.onerror = null;
+                            e.target.src = `https://picsum.photos/seed/fallback${event.id}/400/250.jpg`;
+                          }}
+                        />
                         <div className="event-date-overlay">
                           <span className="date">{day} {monthYear}</span>
+                          {tentativeDateInfo && (
+                            <span className="tentative-date mx-3">Tentative: {tentativeDateInfo.day} {tentativeDateInfo.monthYear}</span>
+                          )}
                         </div>
                         <div className="event-status-badge">
                           <span className={`badge ${status.className}`}>{status.text}</span>
@@ -390,6 +413,20 @@ function Events() {
                             <i className="bi bi-geo-alt"></i>
                             <span>{event.venue}</span>
                           </div>
+                          <div className="info-row">
+                            <i className="bi bi-calendar-event"></i>
+                            <span>
+                              <strong>Event Date:</strong> {fullDate} at {time}
+                            </span>
+                          </div>
+                          {tentativeDateInfo && (
+                            <div className="info-row">
+                              <i className="bi bi-calendar-question"></i>
+                              <span>
+                                <strong>Tentative Date:</strong> {tentativeDateInfo.fullDate}
+                              </span>
+                            </div>
+                          )}
                         </div>
                         <div className="event-footer">
                           {!event.is_past && (
@@ -457,140 +494,164 @@ function Events() {
 
         {/* Simplified Registration Modal */}
         <Modal show={showSimplifiedRegistration} onHide={() => setShowSimplifiedRegistration(false)} centered size="lg">
-  <Modal.Header style={{backgroundColor: '#0b5ed7', color: 'white'}} closeButton>
-    <Modal.Title>Event Registration</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    <Form onSubmit={handleRegistrationSubmit}>
-      {/* Event Information Fields */}
-      <Form.Group className="mb-3">
-        <Form.Label>Event Name</Form.Label>
-        <Form.Control
-          type="text"
-          value={selectedEvent ? selectedEvent.event_name : ''}
-          readOnly
-          className="bg-light"
-        />
-      </Form.Group>
-      
-      <Form.Group className="mb-3">
-        <Form.Label>Event ID</Form.Label>
-        <Form.Control
-          type="text"
-          value={selectedEvent ? selectedEvent.event_id : ''}
-          readOnly
-          className="bg-light"
-        />
-      </Form.Group>
-      
-      <Form.Group className="mb-3">
-        <Form.Label>Email Address</Form.Label>
-        <Form.Control
-          type="email"
-          placeholder="Enter your email address"
-          value={userData.email}
-          onChange={handleEmailChange}
-          required
-        />
-        <Form.Text className="text-muted">
-          {userExists ? "We found your account. Your details have been pre-filled." : "New to our events? Please fill in your details below."}
-        </Form.Text>
-      </Form.Group>
-      
-      {userExists ? (
-        <>
-          <Form.Group className="mb-3">
-            <Form.Label>Full Name</Form.Label>
-            <Form.Control
-              type="text"
-              value={userData.full_name}
-              disabled
-              className="bg-light"
-            />
-          </Form.Group>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
-            <Form.Control
-              type="tel"
-              value={userData.phone}
-              disabled
-              className="bg-light"
-            />
-          </Form.Group>
-          
-          <div className="alert alert-info">
-            <p>Welcome back! Your account has been found.</p>
-            <p>If you need to update your information, please contact our support team.</p>
-          </div>
-        </>
-      ) : (
-        <>
-          <Form.Group className="mb-3">
-            <Form.Label>Full Name</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter your full name"
-              value={userData.full_name}
-              onChange={(e) => setUserData(prevData => ({ ...prevData, full_name: e.target.value }))}
-              required
-            />
-          </Form.Group>
-          
-          <Form.Group className="mb-3">
-            <Form.Label>Phone Number</Form.Label>
-            <Form.Control
-              type="tel"
-              placeholder="Enter your phone number"
-              value={userData.phone}
-              onChange={(e) => setUserData(prevData => ({ ...prevData, phone: e.target.value }))}
-              required
-            />
-          </Form.Group>
-        </>
-      )}
-      
-      <Form.Group className="mb-3">
-        <Form.Label>Participant Type</Form.Label>
-        <Form.Select
-          value={userData.participant_type}
-          onChange={(e) => setUserData(prevData => ({ ...prevData, participant_type: e.target.value }))}
-          required
-        >
-          <option value="audience">Audience</option>
-          <option value="participant">Participant</option>
-          {/* <option value="volunteer">Volunteer</option>
-          <option value="speaker">Speaker</option>
-          <option value="organizer">Organizer</option> */}
-        </Form.Select>
-      </Form.Group>
-      
-      <div className="d-flex justify-content-end">
-        <Button variant="secondary" className="me-2" onClick={() => setShowSimplifiedRegistration(false)}>
-          Cancel
-        </Button>
-        <Button variant="primary" type="submit" disabled={registeringForEvent}>
-          {registeringForEvent ? 'Registering...' : 'Register for Event'}
-        </Button>
-      </div>
-    </Form>
-  </Modal.Body>
-</Modal>
+          <Modal.Header style={{backgroundColor: '#0b5ed7', color: 'white'}} closeButton>
+            <Modal.Title>Event Registration</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form onSubmit={handleRegistrationSubmit}>
+              {/* Event Information Fields */}
+              <Form.Group className="mb-3">
+                <Form.Label>Event Name</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={selectedEvent ? selectedEvent.event_name : ''}
+                  readOnly
+                  className="bg-light"
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Event ID</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={selectedEvent ? selectedEvent.event_id : ''}
+                  readOnly
+                  className="bg-light"
+                />
+              </Form.Group>
 
-{/* Message Modal */}
-<Modal show={showMessageModal} onHide={() => setShowMessageModal(false)} centered>
-  <Modal.Header closeButton>
-    <Modal.Title>Information</Modal.Title>
-  </Modal.Header>
-  <Modal.Body className='modal-p'>
-    <p>{messageContent}</p>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="primary" onClick={() => setShowMessageModal(false)}>
-      OK
-    </Button>
-  </Modal.Footer>
-</Modal>
+              {/* Display both dates in the registration modal */}
+              {selectedEvent && (
+                <>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Event Date & Time</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={`${formatDate(selectedEvent.event_date_time).fullDate} at ${formatTime(selectedEvent.event_date_time)}`}
+                      readOnly
+                      className="bg-light"
+                    />
+                  </Form.Group>
+                  
+                  {selectedEvent.tentative_date && (
+                    <Form.Group className="mb-3">
+                      <Form.Label>Tentative Date</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={formatDate(selectedEvent.tentative_date).fullDate}
+                        readOnly
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  )}
+                </>
+              )}
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Email Address</Form.Label>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={userData.email}
+                  onChange={handleEmailChange}
+                  required
+                />
+                <Form.Text className="text-muted">
+                  {userExists ? "We found your account. Your details have been pre-filled." : "New to our events? Please fill in your details below."}
+                </Form.Text>
+              </Form.Group>
+              
+              {userExists ? (
+                <>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Full Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={userData.full_name}
+                      disabled
+                      className="bg-light"
+                    />
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Phone Number</Form.Label>
+                    <Form.Control
+                      type="tel"
+                      value={userData.phone}
+                      disabled
+                      className="bg-light"
+                    />
+                  </Form.Group>
+                  
+                  <div className="alert alert-info">
+                    <p>Welcome back! Your account has been found.</p>
+                    <p>If you need to update your information, please contact our support team.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Full Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={userData.full_name}
+                      onChange={(e) => setUserData(prevData => ({ ...prevData, full_name: e.target.value }))}
+                      required
+                    />
+                  </Form.Group>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Phone Number</Form.Label>
+                    <Form.Control
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={userData.phone}
+                      onChange={(e) => setUserData(prevData => ({ ...prevData, phone: e.target.value }))}
+                      required
+                    />
+                  </Form.Group>
+                </>
+              )}
+              
+              <Form.Group className="mb-3">
+                <Form.Label>Participant Type</Form.Label>
+                <Form.Select
+                  value={userData.participant_type}
+                  onChange={(e) => setUserData(prevData => ({ ...prevData, participant_type: e.target.value }))}
+                  required
+                >
+                  <option value="audience">Audience</option>
+                  <option value="participant">Participant</option>
+                </Form.Select>
+              </Form.Group>
+              
+              <div className="d-flex justify-content-end">
+                <Button variant="secondary" className="me-2" onClick={() => setShowSimplifiedRegistration(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" type="submit" disabled={registeringForEvent}>
+                  {registeringForEvent ? 'Registering...' : 'Register for Event'}
+                </Button>
+              </div>
+            </Form>
+          </Modal.Body>
+        </Modal>
+
+        {/* Message Modal */}
+        <Modal show={showMessageModal} onHide={() => setShowMessageModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Information</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className='modal-p'>
+            <p>{messageContent}</p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={() => setShowMessageModal(false)}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Container>
     </div>
   );

@@ -638,11 +638,11 @@ const RegistrationPreview = ({
           <p className="mb-0 small mt-1">
             Visit us at:{" "}
             <a
-              href="http://localhost:3000/eventmanagement/"
+              href="https://brinfotainment.in/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              http://localhost:3000/eventmanagement/
+              https://brinfotainment.in/
             </a>
           </p>
         </div>
@@ -808,7 +808,7 @@ const RegistrationPreview = ({
 
           /* Ensure link appears in print */
           .form-footer a:after {
-            content: " (http://localhost:3000/eventmanagement/)";
+            content: " (https://brinfotainment.in/)";
             font-size: 0.8em;
           }
 

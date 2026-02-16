@@ -15,10 +15,13 @@ const ManageEvent = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
 
+  // Base URL for images
+  const BASE_URL = "https://mahadevaaya.com/eventmanagement/eventmanagement_backend";
+
   // State for all events
   const [events, setEvents] = useState([]);
   
-  // Form state for selected event
+  // Form state for selected event - updated to include all fields from API
   const [formData, setFormData] = useState({
     id: null,
     event_id: "",
@@ -30,6 +33,9 @@ const ManageEvent = () => {
     is_past: false,
     is_present: false,
     is_upcoming: false,
+    image: null,
+    imagePreview: null,
+    tentative_date: null,
     created_at: "",
     updated_at: ""
   });
@@ -85,10 +91,19 @@ const ManageEvent = () => {
       console.log("GET All Events API Response:", result);
 
       if (result.success && result.data && result.data.length > 0) {
-        setEvents(result.data);
+        // Process image URLs for all events
+        const processedEvents = result.data.map(event => ({
+          ...event,
+          imageUrl: event.image ? `${BASE_URL}${event.image}` : null
+        }));
+        setEvents(processedEvents);
       } else if (Array.isArray(result)) {
-        // Handle direct array response
-        setEvents(result);
+        // Handle direct array response - process image URLs
+        const processedEvents = result.map(event => ({
+          ...event,
+          imageUrl: event.image ? `${BASE_URL}${event.image}` : null
+        }));
+        setEvents(processedEvents);
       } else {
         setEvents([]);
       }
@@ -149,6 +164,8 @@ const ManageEvent = () => {
         cleanDescription = cleanDescription.replace(/.*?description": "(.*?)".*?/, '$1');
       }
 
+      // Updated to include all fields from API
+      const imageUrl = eventData.image ? `${BASE_URL}${eventData.image}` : null;
       setFormData({
         id: eventData.id,
         event_id: eventData.event_id,
@@ -160,6 +177,10 @@ const ManageEvent = () => {
         is_past: eventData.is_past,
         is_present: eventData.is_present,
         is_upcoming: eventData.is_upcoming,
+        image: null, // We don't store the actual image file, just the URL
+        imagePreview: imageUrl,
+        imageUrl: imageUrl,
+        tentative_date: eventData.tentative_date,
         created_at: eventData.created_at,
         updated_at: eventData.updated_at
       });
@@ -190,6 +211,22 @@ const ManageEvent = () => {
     }));
   };
 
+  // Handle image file change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          image: file,
+          imagePreview: reader.result,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Reset form to original data
   const resetForm = () => {
     if (selectedEventId) {
@@ -215,6 +252,7 @@ const ManageEvent = () => {
 
   // Enable adding new event
   const addNewEvent = () => {
+    // Updated to include all fields
     setFormData({
       id: null,
       event_id: "",
@@ -226,6 +264,10 @@ const ManageEvent = () => {
       is_past: false,
       is_present: false,
       is_upcoming: false,
+      image: null,
+      imagePreview: null,
+      imageUrl: null,
+      tentative_date: null,
       created_at: "",
       updated_at: ""
     });
@@ -275,32 +317,35 @@ const ManageEvent = () => {
       // Calculate status based on event date
       const status = calculateEventStatus(formData.event_date_time);
       
-      const payload = {
-        event_id: formData.event_id,
-        event_name: formData.event_name,
-        description: formData.description,
-        event_date_time: formData.event_date_time,
-        venue: formData.venue,
-        event_type: formData.event_type || null,
-        is_past: status.is_past,
-        is_present: status.is_present,
-        is_upcoming: status.is_upcoming
-      };
+      // Use FormData for submission to handle file uploads
+      const formDataToSend = new FormData();
+      formDataToSend.append("event_id", formData.event_id);
+      formDataToSend.append("event_name", formData.event_name);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("event_date_time", formData.event_date_time);
+      formDataToSend.append("venue", formData.venue);
+      formDataToSend.append("event_type", formData.event_type || null);
+      formDataToSend.append("is_past", status.is_past);
+      formDataToSend.append("is_present", status.is_present);
+      formDataToSend.append("is_upcoming", status.is_upcoming);
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+      formDataToSend.append("tentative_date", formData.tentative_date);
 
       console.log("Submitting data for event:", formData.event_name);
-      console.log("Payload:", payload);
 
       let response;
       let successMessage;
       
       if (formData.id) {
         // Update existing event
-        payload.id = formData.id;
+        formDataToSend.append("id", formData.id);
         response = await authFetch(
           `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/`,
           {
             method: "PUT",
-            body: JSON.stringify(payload),
+            body: formDataToSend,
           }
         );
         successMessage = "Event updated successfully!";
@@ -310,7 +355,7 @@ const ManageEvent = () => {
           "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/",
           {
             method: "POST",
-            body: JSON.stringify(payload),
+            body: formDataToSend,
           }
         );
         successMessage = "Event created successfully!";
@@ -466,9 +511,7 @@ const ManageEvent = () => {
           <Container fluid className="dashboard-body dashboard-main-container">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h1 className="page-title mb-0">Manage Events</h1>
-              <Button variant="primary" onClick={addNewEvent}>
-                <FaPlus /> Add New Event
-              </Button>
+             
             </div>
 
             {/* Alert for success/error messages */}
@@ -507,6 +550,14 @@ const ManageEvent = () => {
                             {events.map((event) => (
                               <Col md={6} lg={4} className="mb-4" key={event.id}>
                                 <Card className="h-100 event-card profile-card">
+                                  {event.imageUrl && (
+                                    <Card.Img 
+                                      variant="top" 
+                                      src={event.imageUrl} 
+                                      alt={event.event_name}
+                                      style={{ height: '150px', objectFit: 'cover' }}
+                                    />
+                                  )}
                                   <Card.Body className="d-flex flex-column">
                                     <div className="flex-grow-1">
                                       <div className="d-flex justify-content-between align-items-start mb-2">
@@ -529,6 +580,11 @@ const ManageEvent = () => {
                                         <FaMapMarkerAlt className="me-1" />
                                         {event.venue}
                                       </Card.Text>
+                                      {event.tentative_date && (
+                                        <Card.Text className="text-muted mb-2">
+                                          <strong>Tentative Date:</strong> {formatDate(event.tentative_date)}
+                                        </Card.Text>
+                                      )}
                                       <Card.Text className="text-muted mb-3">
                                         {event.description && event.description.length > 100 
                                           ? `${event.description.substring(0, 100)}...` 
@@ -668,72 +724,83 @@ const ManageEvent = () => {
                             </Col>
                           </Row>
 
-                          {formData.id && (
-                            <Row>
-                              <Col md={6}>
-                                <Form.Group className="mb-3">
-                                  <Form.Label>Created At</Form.Label>
-                                  <Form.Control
-                                    type="text"
-                                    value={formatDate(formData.created_at)}
-                                    disabled
-                                  />
-                                </Form.Group>
-                              </Col>
-                              <Col md={6}>
-                                <Form.Group className="mb-3">
-                                  <Form.Label>Updated At</Form.Label>
-                                  <Form.Control
-                                    type="text"
-                                    value={formatDate(formData.updated_at)}
-                                    disabled
-                                  />
-                                </Form.Group>
-                              </Col>
-                            </Row>
-                          )}
+                          <Row>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Tentative Date</Form.Label>
+                                <Form.Control
+                                  type="date"
+                                  name="tentative_date"
+                                  value={formData.tentative_date ? formData.tentative_date.split('T')[0] : ""}
+                                  onChange={handleChange}
+                                  disabled={!isEditing}
+                                />
+                              </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                              <Form.Group className="mb-3">
+                                <Form.Label>Image</Form.Label>
+                                <Form.Control
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleImageChange}
+                                  disabled={!isEditing}
+                                />
+                                {/* Image Preview */}
+                                {formData.imagePreview || formData.imageUrl ? (
+                                  <div className="mt-3">
+                                    <img 
+                                      src={formData.imagePreview || formData.imageUrl} 
+                                      alt={formData.event_name} 
+                                      className="img-thumbnail" 
+                                      style={{ width: '150px', height: '100px', objectFit: 'cover' }}
+                                    />
+                                  </div>
+                                ) : null}
+                              </Form.Group>
+                            </Col>
+                          </Row>
+
+                          <div className="d-flex gap-2 mt-3">
+                            {isEditing ? (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  type="submit"
+                                  disabled={isSubmitting}
+                                >
+                                  {isSubmitting ? "Saving..." : "Save Changes"}
+                                </Button>
+                                <Button
+                                  variant="secondary"
+                                  onClick={resetForm}
+                                  type="button"
+                                >
+                                  Cancel
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  onClick={enableEditing}
+                                  type="button"
+                                >
+                                  <FaEdit /> Edit Event Details
+                                </Button>
+                                <Button
+                                  variant="outline-danger"
+                                  onClick={() => showDeleteConfirmation(formData)}
+                                  type="button"
+                                >
+                                  <FaTrash /> Delete Event
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </Form>
                       </Card.Body>
                     </Card>
-
-                    <div className="d-flex gap-2 mt-3">
-                      {isEditing ? (
-                        <>
-                          <Button
-                            variant="primary"
-                            type="submit"
-                            disabled={isSubmitting}
-                            onClick={handleSubmit}
-                          >
-                            {isSubmitting ? "Saving..." : "Save Changes"}
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={resetForm}
-                            type="button"
-                          >
-                            Cancel
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="primary"
-                            onClick={enableEditing}
-                            type="button"
-                          >
-                            <FaEdit /> Edit Event Details
-                          </Button>
-                          <Button
-                            variant="outline-danger"
-                            onClick={() => showDeleteConfirmation(formData)}
-                            type="button"
-                          >
-                            <FaTrash /> Delete Event
-                          </Button>
-                        </>
-                      )}
-                    </div>
                   </>
                 )}
               </>

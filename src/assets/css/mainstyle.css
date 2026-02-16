@@ -190,8 +190,9 @@ h6 {
 }
 
 .header .logo img {
-  max-height: 72px;
-  margin-right: 8px;
+     max-height: 70px;
+    margin-right: 8px;
+    border-radius: 56px;
 }
 
 .header .logo h1 {
@@ -199,6 +200,7 @@ h6 {
   margin: 0;
   font-weight: 500;
   color: var(--contrast-color);
+  font-family: emoji;
 }
 
 @media (max-width: 1200px) {
@@ -488,8 +490,9 @@ h6 {
 }
 
 .footer .footer-about .logo img {
-  max-height: 40px;
+  max-height: 70px;
   margin-right: 6px;
+  border-radius: 35px;
 }
 
 .footer .footer-about .logo span {

@@ -111,9 +111,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/AboutUs" element={<AboutUs />} />
             <Route path="/DashBoardHeader" element={<DashBoardHeader />} />
-            <Route path="/Login" element={<Login />} />
-        
-            
+            <Route path="/Login" element={<Login />} />     
              <Route path="/Events" element={<Events />} />
              <Route path="/Contact" element={<Contact />} />
              <Route path="/ForgotPassword" element={<ForgotPassword />} />
