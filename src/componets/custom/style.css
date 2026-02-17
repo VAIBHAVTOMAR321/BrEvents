@@ -190,6 +190,9 @@ body {
    
     color: #010608;
 }
+.form-control-lg{
+font-size: 12px !important;
+}
 .services-list h5{
   font-weight: 700;
 }

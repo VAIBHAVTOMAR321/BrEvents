@@ -8,14 +8,7 @@ import Slide3Image from "../../assets/images/education/events-1.webp";
 import "../../assets/css/mainstyle.css";
 import "../../assets/css/imageTransitions.css";
 
-// Default stats to use when API doesn't provide data
-const defaultStats = [
-  { value: "Michael Rodriguez", label: "Director of Innovation Strategy" },
-  { value: "Date & Time", label: "Day 1 - March 15 9:00 AM" },
-  { value: "Venue", label: "125 Innovation Boulevard, Chicago" }
-];
-
-// Default image to use when API doesn't provide one
+// Default images to use when API doesn't provide one
 const defaultImages = [Showcase, Slide2Image, Slide3Image];
  
 // Array of cinematic animation classes for smooth rotation
@@ -77,11 +70,11 @@ function EventCarousel() {
             return {
               id: slideId, // Ensure we always have an ID
               title: item.title,
-              subtitle: item.sub_title || "Default subtitle text for this carousel item.",
+              subtitle: item.sub_title || "",
               image: imageUrl,
               description: item.description || "",
-              stats: defaultStats, // We'll update this with event data
-              event: null // We'll update this with event data
+              stats: [], // Will be populated with event data
+              event: null // Will be populated with event data
             };
           });
           
@@ -92,19 +85,7 @@ function EventCarousel() {
       } catch (err) {
         console.error('Error fetching carousel data:', err);
         setError(err.message);
-        
-        // Fallback to hardcoded data if API fails
-        setCarouselData([
-          {
-            id: 'fallback-1',
-            title: "Inspiring Excellence Through Education",
-            subtitle: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas eget lacus id tortor facilisis tincidunt.",
-            image: Showcase,
-            description: "Default description for fallback carousel item.",
-            stats: defaultStats,
-            event: null
-          }
-        ]);
+        // Don't set fallback data - only use API data
       }
     };
 
@@ -126,37 +107,75 @@ function EventCarousel() {
             // Get the first event (or the next upcoming event)
             const nextEvent = data.data[0];
             
-            // Format date and time
-            const eventDate = new Date(nextEvent.event_date_time);
-            const formattedDate = eventDate.toLocaleDateString('en-US', { 
-              month: 'short', 
-              day: 'numeric', 
-              year: 'numeric' 
-            });
-            const formattedTime = eventDate.toLocaleTimeString('en-US', { 
-              hour: 'numeric', 
-              minute: '2-digit', 
-              hour12: true 
-            });
-            
-            // Extract day and month for event display
-            const day = eventDate.getDate();
-            const month = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
-            
             // Create new stats with event data
             const eventStats = [
-              { value: nextEvent.event_name, label: "Upcoming Event" },
-              { value: `${formattedDate} at ${formattedTime}`, label: "Date & Time" },
-              { value: nextEvent.venue, label: "Venue" }
+              { value: nextEvent.event_name, label: "Upcoming Event" }
             ];
+            
+            // Only add date and time if event_date_time is not null
+            if (nextEvent.event_date_time && nextEvent.event_date_time !== null) {
+              // Format date and time
+              const eventDate = new Date(nextEvent.event_date_time);
+              const formattedDate = eventDate.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              });
+              const formattedTime = eventDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+              });
+              
+              // Add date and time to stats
+              eventStats.push(
+                { value: `${formattedDate} at ${formattedTime}`, label: "Date & Time" }
+              );
+            }
+            
+            // Only add tentative_date if it's not null
+            if (nextEvent.tentative_date && nextEvent.tentative_date !== null) {
+              // Format tentative date
+              const tentativeDate = new Date(nextEvent.tentative_date);
+              const formattedTentativeDate = tentativeDate.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              });
+              
+              // Add tentative date to stats
+              eventStats.push(
+                { value: formattedTentativeDate, label: "Tentative Date" }
+              );
+            }
+            
+            // Only add venue if it's not null or empty
+            if (nextEvent.venue && nextEvent.venue !== null && nextEvent.venue.trim() !== '') {
+              eventStats.push(
+                { value: nextEvent.venue, label: "Venue" }
+              );
+            }
             
             // Create new event object with event data
             const eventData = {
-              day: day.toString(),
-              month: month,
               title: nextEvent.event_name,
               description: nextEvent.description
             };
+            
+            // Only add date to event display if event_date_time is not null
+            if (nextEvent.event_date_time && nextEvent.event_date_time !== null) {
+              const eventDate = new Date(nextEvent.event_date_time);
+              eventData.day = eventDate.getDate().toString();
+              eventData.month = eventDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+            }
+            
+            // Add tentative date to event display if it's not null
+            if (nextEvent.tentative_date && nextEvent.tentative_date !== null) {
+              const tentativeDate = new Date(nextEvent.tentative_date);
+              eventData.tentativeDay = tentativeDate.getDate().toString();
+              eventData.tentativeMonth = tentativeDate.toLocaleString('default', { month: 'short' }).toUpperCase();
+              eventData.tentativeYear = tentativeDate.getFullYear().toString();
+            }
             
             // Update the first slide with event data
             return prevData.map((slide, index) => {
@@ -231,7 +250,16 @@ function EventCarousel() {
   if (error) {
     return (
       <div className="alert alert-warning m-3" role="alert">
-        Error loading carousel: {error}. Using fallback content.
+        Error loading carousel: {error}. Please try again later.
+      </div>
+    );
+  }
+
+  // If no carousel data is available, don't render anything
+  if (carouselData.length === 0) {
+    return (
+      <div className="alert alert-info m-3" role="alert">
+        No carousel data available at the moment.
       </div>
     );
   }
@@ -263,14 +291,19 @@ function EventCarousel() {
                     <div className="col-lg-12 hero-content" data-aos="fade-right">
                       <h1>{slide.title}</h1>
                       <p>{slide.subtitle}</p>
-                      <div className="stats-row">
-                        {slide.stats.map((stat, index) => (
-                          <div key={index} className="stat-item">
-                            <span className="stat-number">{stat.value}</span>
-                            <span className="stat-label">{stat.label}</span>
-                          </div>
-                        ))}
-                      </div>
+                      
+                      {/* Only render stats if they exist */}
+                      {slide.stats && slide.stats.length > 0 && (
+                        <div className="stats-row">
+                          {slide.stats.map((stat, index) => (
+                            <div key={index} className="stat-item">
+                              <span className="stat-number">{stat.value}</span>
+                              <span className="stat-label">{stat.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
                       <div className="action-buttons">
                         <Link to="/Registration" className="btn-primary" onClick={openRegistration}>Registration</Link>
                       </div>
@@ -292,10 +325,24 @@ function EventCarousel() {
                 <div className="upcoming-event" data-aos="fade-up">
                   <div className="container">
                     <div className="event-content">
-                      <div className="event-date">
-                        <span className="day">{slide.event.day}</span>
-                        <span className="month">{slide.event.month}</span>
-                      </div>
+                      {/* Only render event date if it exists */}
+                      {slide.event.day && slide.event.month && (
+                        <div className="event-date">
+                          <span className="day">{slide.event.day}</span>
+                          <span className="month">{slide.event.month}</span>
+                        </div>
+                      )}
+                      
+                      {/* Only render tentative date if it exists */}
+                      {slide.event.tentativeDay && slide.event.tentativeMonth && (
+                        <div className="event-date tentative-date">
+                          <span className="day">{slide.event.tentativeDay}</span>
+                          <span className="month">{slide.event.tentativeMonth}</span>
+                          <span className="year">{slide.event.tentativeYear}</span>
+                          <span className="label">Tentative</span>
+                        </div>
+                      )}
+                      
                       <div className="event-info">
                         <h3>{slide.event.title}</h3>
                         <p>{slide.event.description}</p>

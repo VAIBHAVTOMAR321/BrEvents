@@ -25,6 +25,7 @@ const AddEvent = () => {
     event_date_time: "",
     venue: "",
     event_type: "",
+    other_event_type: "",
     tentative_date: null,
     image: "" // Will store either file or URL
   });
@@ -186,9 +187,7 @@ const AddEvent = () => {
       errors.description = "Description must be at least 10 characters";
     }
     
-    if (!formData.event_date_time) {
-      errors.event_date_time = "Event date and time is required";
-    } else {
+    if (formData.event_date_time) {
       const selectedDate = new Date(formData.event_date_time);
       const now = new Date();
       if (selectedDate < now) {
@@ -217,21 +216,46 @@ const AddEvent = () => {
     setSuccess("");
     
     try {
+      // Helper function to format datetime to ISO 8601 format required by API
+      const formatDateTimeForAPI = (dateTimeStr) => {
+        if (!dateTimeStr) return null;
+        // If it's already in ISO format or null, return as is
+        if (dateTimeStr === null || dateTimeStr.includes('Z') || dateTimeStr.includes('+')) {
+          return dateTimeStr;
+        }
+        // If it's just date or date time without timezone (like YYYY-MM-DD or YYYY-MM-DDTHH:MM)
+        try {
+          const date = new Date(dateTimeStr);
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            return null;
+          }
+          return date.toISOString();
+        } catch (error) {
+          console.error("Error formatting datetime:", error);
+          return null;
+        }
+      };
+
       // Prepare payload based on image type
       let payload;
       let headers = {};
 
-      if (selectedImage) {
+       if (selectedImage) {
         // If image is a file, use FormData
         payload = new FormData();
         payload.append('event_name', formData.event_name);
         payload.append('description', formData.description);
-        payload.append('event_date_time', formData.event_date_time);
+        const formattedDateTime = formatDateTimeForAPI(formData.event_date_time);
+        if (formattedDateTime) {
+          payload.append('event_date_time', formattedDateTime);
+        }
         payload.append('venue', formData.venue);
         
-        // Only add event_type if it has a value
+        // Only add event_type if it has a value (use other_event_type if type is "other")
         if (formData.event_type) {
-          payload.append('event_type', formData.event_type);
+          const eventTypeToSend = formData.event_type === 'other' ? formData.other_event_type : formData.event_type;
+          payload.append('event_type', eventTypeToSend);
         }
         
         // Only add tentative_date if it has a value
@@ -249,18 +273,22 @@ const AddEvent = () => {
       } else {
         // If image is a URL or no image, use JSON
         headers['Content-Type'] = 'application/json';
-        payload = JSON.stringify({
+        const jsonPayload = {
           event_name: formData.event_name,
           description: formData.description,
-          event_date_time: formData.event_date_time,
           venue: formData.venue,
-          event_type: formData.event_type || null,
+          event_type: formData.event_type === 'other' ? formData.other_event_type : (formData.event_type || null),
           tentative_date: formData.tentative_date || null,
           image: formData.image || null, // URL or null
           is_past: eventStatus.is_past,
           is_present: eventStatus.is_present,
           is_upcoming: eventStatus.is_upcoming
-        });
+        };
+        const formattedDateTime = formatDateTimeForAPI(formData.event_date_time);
+        if (formattedDateTime) {
+          jsonPayload.event_date_time = formattedDateTime;
+        }
+        payload = JSON.stringify(jsonPayload);
       }
       
       const response = await authFetch(
@@ -277,13 +305,14 @@ const AddEvent = () => {
       if (response.ok) {
         setSuccess("Event created successfully!");
         
-        // Reset form
+         // Reset form
         setFormData({
           event_name: "",
           description: "",
           event_date_time: "",
           venue: "",
           event_type: "",
+          other_event_type: "",
           tentative_date: null,
           image: ""
         });
@@ -430,7 +459,7 @@ const AddEvent = () => {
                       <Form.Group>
                         <Form.Label className="d-flex align-items-center">
                           <FaCalendarAlt className="me-2 text-success" />
-                          Date & Time <span className="text-danger ms-1">*</span>
+                          Date & Time
                         </Form.Label>
                         <Form.Control
                           type="datetime-local"
@@ -445,7 +474,7 @@ const AddEvent = () => {
                           {validationErrors.event_date_time}
                         </Form.Control.Feedback>
                         <Form.Text className="text-muted">
-                          Select a future date and time for the event
+                          Select a future date and time for the event (optional)
                         </Form.Text>
                       </Form.Group>
                     </Col>
@@ -471,7 +500,7 @@ const AddEvent = () => {
                     </Col>
                   </Row>
 
-                  <Row>
+                   <Row>
                     {/* Event Type */}
                     <Col md={6} className="mb-3">
                       <Form.Group>
@@ -490,7 +519,6 @@ const AddEvent = () => {
                           <option value="workshop">Workshop</option>
                           <option value="seminar">Seminar</option>
                           <option value="webinar">Webinar</option>
-                      
                           <option value="other">Other</option>
                         </Form.Select>
                         <Form.Text className="text-muted">
@@ -498,6 +526,29 @@ const AddEvent = () => {
                         </Form.Text>
                       </Form.Group>
                     </Col>
+
+                    {/* Other Event Type Input */}
+                    {formData.event_type === 'other' && (
+                      <Col md={6} className="mb-3">
+                        <Form.Group>
+                          <Form.Label className="d-flex align-items-center">
+                            <FaInfoCircle className="me-2 text-info" />
+                            Specify Event Type
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="other_event_type"
+                            value={formData.other_event_type}
+                            onChange={handleChange}
+                            placeholder="Enter custom event type"
+                            className="form-control-lg"
+                          />
+                          <Form.Text className="text-muted">
+                            Please specify the type of event
+                          </Form.Text>
+                        </Form.Group>
+                      </Col>
+                    )}
                   </Row>
 
                   {/* Event Image */}
@@ -667,42 +718,7 @@ const AddEvent = () => {
               </Card.Body>
             </Card>
 
-            {/* Preview Card */}
-            {formData.event_name && (
-              <Card className="shadow-sm mt-4">
-                <Card.Header className="bg-light">
-                  <h5 className="mb-0">Event Preview</h5>
-                </Card.Header>
-                <Card.Body>
-                  <Row>
-                    <Col md={6}>
-                      <p><strong>Name:</strong> {formData.event_name || 'Not specified'}</p>
-                      <p><strong>Venue:</strong> {formData.venue || 'Not specified'}</p>
-                      <p><strong>Type:</strong> {formData.event_type ? formData.event_type.charAt(0).toUpperCase() + formData.event_type.slice(1) : 'Not specified'}</p>
-                      <p><strong>Status:</strong> {getStatusBadge()}</p>
-                      {imagePreview && (
-                        <div>
-                          <p><strong>Image:</strong></p>
-                          <img 
-                            src={imagePreview} 
-                            alt="Event Preview" 
-                            className="img-thumbnail" 
-                            style={{ width: '200px', height: '133px', objectFit: 'cover' }}
-                          />
-                        </div>
-                      )}
-                    </Col>
-                    <Col md={6}>
-                      <p><strong>Date & Time:</strong> {formData.event_date_time ? 
-                        new Date(formData.event_date_time).toLocaleString() : 'Not specified'}</p>
-                      <p><strong>Tentative Date:</strong> {formData.tentative_date ? 
-                        new Date(formData.tentative_date).toLocaleDateString() : 'Not specified'}</p>
-                      <p><strong>Description:</strong> {formData.description || 'Not specified'}</p>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            )}
+           
           </Container>
         </div>
       </div>

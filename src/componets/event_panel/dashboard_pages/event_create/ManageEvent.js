@@ -21,7 +21,7 @@ const ManageEvent = () => {
   // State for all events
   const [events, setEvents] = useState([]);
   
-  // Form state for selected event - updated to include all fields from API
+   // Form state for selected event - updated to include all fields from API
   const [formData, setFormData] = useState({
     id: null,
     event_id: "",
@@ -30,14 +30,14 @@ const ManageEvent = () => {
     event_date_time: "",
     venue: "",
     event_type: "",
+    // other_event_type: "",
     is_past: false,
     is_present: false,
     is_upcoming: false,
     image: null,
     imagePreview: null,
     tentative_date: null,
-    created_at: "",
-    updated_at: ""
+  
   });
 
   // Submission state
@@ -164,8 +164,19 @@ const ManageEvent = () => {
         cleanDescription = cleanDescription.replace(/.*?description": "(.*?)".*?/, '$1');
       }
 
-      // Updated to include all fields from API
+       // Updated to include all fields from API
       const imageUrl = eventData.image ? `${BASE_URL}${eventData.image}` : null;
+      
+      // Check if event type is a custom type not in predefined options
+      const predefinedEventTypes = ['conference', 'workshop', 'seminar', 'webinar', 'networking'];
+      let eventType = eventData.event_type || "";
+      let otherEventType = "";
+      
+      if (eventType && !predefinedEventTypes.includes(eventType.toLowerCase())) {
+        otherEventType = eventType;
+        eventType = "other";
+      }
+      
       setFormData({
         id: eventData.id,
         event_id: eventData.event_id,
@@ -173,7 +184,8 @@ const ManageEvent = () => {
         description: cleanDescription,
         event_date_time: eventData.event_date_time,
         venue: eventData.venue,
-        event_type: eventData.event_type || "",
+        event_type: eventType,
+        other_event_type: eventType,
         is_past: eventData.is_past,
         is_present: eventData.is_present,
         is_upcoming: eventData.is_upcoming,
@@ -181,8 +193,7 @@ const ManageEvent = () => {
         imagePreview: imageUrl,
         imageUrl: imageUrl,
         tentative_date: eventData.tentative_date,
-        created_at: eventData.created_at,
-        updated_at: eventData.updated_at
+       
       });
 
       setSelectedEventId(eventId);
@@ -207,7 +218,7 @@ const ManageEvent = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: value === "" ? null : value,
     }));
   };
 
@@ -250,7 +261,7 @@ const ManageEvent = () => {
     setShowAlert(false);
   };
 
-  // Enable adding new event
+   // Enable adding new event
   const addNewEvent = () => {
     // Updated to include all fields
     setFormData({
@@ -261,6 +272,7 @@ const ManageEvent = () => {
       event_date_time: "",
       venue: "",
       event_type: "",
+      other_event_type: "",
       is_past: false,
       is_present: false,
       is_upcoming: false,
@@ -268,8 +280,7 @@ const ManageEvent = () => {
       imagePreview: null,
       imageUrl: null,
       tentative_date: null,
-      created_at: "",
-      updated_at: ""
+     
     });
     setIsEditing(true);
     setSelectedEventId(null);
@@ -317,40 +328,126 @@ const ManageEvent = () => {
       // Calculate status based on event date
       const status = calculateEventStatus(formData.event_date_time);
       
-      // Use FormData for submission to handle file uploads
-      const formDataToSend = new FormData();
-      formDataToSend.append("event_id", formData.event_id);
-      formDataToSend.append("event_name", formData.event_name);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("event_date_time", formData.event_date_time);
-      formDataToSend.append("venue", formData.venue);
-      formDataToSend.append("event_type", formData.event_type || null);
-      formDataToSend.append("is_past", status.is_past);
-      formDataToSend.append("is_present", status.is_present);
-      formDataToSend.append("is_upcoming", status.is_upcoming);
-      if (formData.image) {
-        formDataToSend.append("image", formData.image);
-      }
-      formDataToSend.append("tentative_date", formData.tentative_date);
-
-      console.log("Submitting data for event:", formData.event_name);
-
       let response;
       let successMessage;
       
-      if (formData.id) {
-        // Update existing event
-        formDataToSend.append("id", formData.id);
-        response = await authFetch(
-          `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/`,
-          {
-            method: "PUT",
-            body: formDataToSend,
+      // Helper function to format datetime to ISO 8601 format required by API
+      const formatDateTimeForAPI = (dateTimeStr) => {
+        if (!dateTimeStr) return null;
+        // If it's already in ISO format or null, return as is
+        if (dateTimeStr === null || dateTimeStr.includes('Z') || dateTimeStr.includes('+')) {
+          return dateTimeStr;
+        }
+        // If it's just date or date time without timezone (like YYYY-MM-DD or YYYY-MM-DDTHH:MM)
+        try {
+          const date = new Date(dateTimeStr);
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            return null;
           }
-        );
+          return date.toISOString();
+        } catch (error) {
+          console.error("Error formatting datetime:", error);
+          return null;
+        }
+      };
+      
+      if (formData.id) {
+        // Update existing event - handle null date fields properly
+        // If there's an image to upload, use FormData; otherwise, use JSON
+        if (formData.image) {
+          const formDataToSend = new FormData();
+          formDataToSend.append("id", formData.id);
+          formDataToSend.append("event_id", formData.event_id);
+          formDataToSend.append("event_name", formData.event_name);
+          formDataToSend.append("description", formData.description);
+          const formattedDateTime = formatDateTimeForAPI(formData.event_date_time);
+          if (formattedDateTime) {
+            formDataToSend.append("event_date_time", formattedDateTime);
+          }
+          formDataToSend.append("venue", formData.venue);
+          
+          if (formData.event_type) {
+            const eventTypeToSend = formData.event_type === 'other' ? formData.other_event_type : formData.event_type;
+            formDataToSend.append("event_type", eventTypeToSend);
+          }
+          
+          formDataToSend.append("is_past", status.is_past);
+          formDataToSend.append("is_present", status.is_present);
+          formDataToSend.append("is_upcoming", status.is_upcoming);
+          formDataToSend.append("image", formData.image);
+          if (formData.tentative_date) {
+            formDataToSend.append("tentative_date", formData.tentative_date);
+          }
+          
+          console.log("Updating event with image and data:", formData);
+          
+          response = await authFetch(
+            `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/`,
+            {
+              method: "PUT",
+              body: formDataToSend
+            }
+          );
+        } else {
+          // No image to upload - use JSON to support null values
+          const updateData = {
+            id: formData.id,
+            event_id: formData.event_id,
+            event_name: formData.event_name,
+            description: formData.description,
+            event_date_time: formatDateTimeForAPI(formData.event_date_time),
+            venue: formData.venue,
+            event_type: formData.event_type === 'other' ? formData.other_event_type : formData.event_type,
+            is_past: status.is_past,
+            is_present: status.is_present,
+            is_upcoming: status.is_upcoming,
+            tentative_date: formData.tentative_date || null
+          };
+          
+          console.log("Updating event with data:", updateData);
+          
+          response = await authFetch(
+            `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(updateData)
+            }
+          );
+        }
         successMessage = "Event updated successfully!";
       } else {
-        // Create new event
+        // Create new event - use FormData for file upload
+        const formDataToSend = new FormData();
+        formDataToSend.append("event_id", formData.event_id);
+        formDataToSend.append("event_name", formData.event_name);
+        formDataToSend.append("description", formData.description);
+        const formattedDateTime = formatDateTimeForAPI(formData.event_date_time);
+        if (formattedDateTime) {
+          formDataToSend.append("event_date_time", formattedDateTime);
+        }
+        formDataToSend.append("venue", formData.venue);
+        
+        if (formData.event_type) {
+          const eventTypeToSend = formData.event_type === 'other' ? formData.other_event_type : formData.event_type;
+          formDataToSend.append("event_type", eventTypeToSend);
+        }
+        
+        formDataToSend.append("is_past", status.is_past);
+        formDataToSend.append("is_present", status.is_present);
+        formDataToSend.append("is_upcoming", status.is_upcoming);
+        if (formData.image) {
+          formDataToSend.append("image", formData.image);
+        }
+        if (formData.tentative_date) {
+          formDataToSend.append("tentative_date", formData.tentative_date);
+        }
+        
+        console.log("Creating new event with data:", formData);
+        
         response = await authFetch(
           "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/event-item/",
           {
@@ -481,6 +578,13 @@ const ManageEvent = () => {
     return date.toLocaleString();
   };
 
+  // Format date only for display
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   // Format date for input
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
@@ -540,7 +644,7 @@ const ManageEvent = () => {
                   <>
                     <Row className="mb-4">
                       <Col>
-                        <h2 className="mb-4">Select an Event to Edit</h2>
+                       
                         {events.length === 0 ? (
                           <Alert variant="info">
                             No events found. Click "Add New Event" to create one.
@@ -582,7 +686,7 @@ const ManageEvent = () => {
                                       </Card.Text>
                                       {event.tentative_date && (
                                         <Card.Text className="text-muted mb-2">
-                                          <strong>Tentative Date:</strong> {formatDate(event.tentative_date)}
+                                          <strong>Tentative Date:</strong> {formatDateOnly(event.tentative_date)}
                                         </Card.Text>
                                       )}
                                       <Card.Text className="text-muted mb-3">
@@ -665,6 +769,23 @@ const ManageEvent = () => {
                                 </Form.Select>
                               </Form.Group>
                             </Col>
+
+                            {/* Other Event Type Input */}
+                            {formData.event_type === 'other' && (
+                              <Col md={6}>
+                                <Form.Group className="mb-3">
+                                  <Form.Label>Specify Event Type</Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    name="other_event_type"
+                                    value={formData.other_event_type}
+                                    onChange={handleChange}
+                                    placeholder="Enter custom event type"
+                                    disabled={!isEditing}
+                                  />
+                                </Form.Group>
+                              </Col>
+                            )}
                           </Row>
 
                           <Form.Group className="mb-3">
@@ -703,7 +824,6 @@ const ManageEvent = () => {
                                   name="event_date_time"
                                   value={formData.event_date_time ? formatDateForInput(formData.event_date_time) : ""}
                                   onChange={handleChange}
-                                  required
                                   disabled={!isEditing}
                                 />
                               </Form.Group>

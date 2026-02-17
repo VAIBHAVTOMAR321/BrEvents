@@ -261,9 +261,9 @@ function Events() {
     }
   };
 
-  // Improved date formatting function
+  // Improved date formatting function - returns null if no date
   const formatDate = (dateString) => {
-    if (!dateString) return { day: 'N/A', monthYear: 'N/A', fullDate: 'N/A' };
+    if (!dateString) return null;
     
     const date = new Date(dateString);
     const options = { day: 'numeric', month: 'short', year: 'numeric' };
@@ -277,7 +277,10 @@ function Events() {
     };
   };
 
+  // Improved time formatting function - returns null if no date
   const formatTime = (dateString) => {
+    if (!dateString) return null;
+    
     const date = new Date(dateString);
     let hours = date.getHours();
     const minutes = date.getMinutes();
@@ -357,18 +360,16 @@ function Events() {
             <div className="row section-title g-4">
                
               {filteredEvents.map((event, index) => {
-                const { day, monthYear, fullDate } = formatDate(event.event_date_time);
-                const time = formatTime(event.event_date_time);
+                const dateInfo = formatDate(event.event_date_time);
+                const timeInfo = formatTime(event.event_date_time);
+                const tentativeDateInfo = formatDate(event.tentative_date);
                 const status = getStatusBadge(event);
                 const aosDelay = 200 + (index % 3) * 100;
                 
                 // Handle image URL - if image is null or undefined, use a placeholder
                 const imageUrl = event.image 
-                  ? `https://mahadevaaya.com/eventmanagement/${event.image}` 
+                  ? `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/${event.image}` 
                   : `https://picsum.photos/seed/event${event.id}/400/250.jpg`;
-
-                // Format tentative date if exists
-                const tentativeDateInfo = event.tentative_date ? formatDate(event.tentative_date) : null;
 
                 return (
                   <div key={event.id} className="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay={aosDelay}>
@@ -385,40 +386,46 @@ function Events() {
                             e.target.src = `https://picsum.photos/seed/fallback${event.id}/400/250.jpg`;
                           }}
                         />
-                        <div className="event-date-overlay">
-                          <span className="date">{day} {monthYear}</span>
-                          {tentativeDateInfo && (
-                            <span className="tentative-date mx-3">Tentative: {tentativeDateInfo.day} {tentativeDateInfo.monthYear}</span>
-                          )}
-                        </div>
+                        {/* Only show date overlay if date exists */}
+                        {dateInfo && (
+                          <div className="event-date-overlay">
+                            <span className="date">{dateInfo.day} {dateInfo.monthYear}</span>
+                            {tentativeDateInfo && (
+                              <span className="tentative-date mx-3">Tentative: {tentativeDateInfo.day} {tentativeDateInfo.monthYear}</span>
+                            )}
+                          </div>
+                        )}
                         <div className="event-status-badge">
                           <span className={`badge ${status.className}`}>{status.text}</span>
                         </div>
                       </div>
                       <div className="event-details">
                         <div className="event-category">
-                          <span className={`badge ${getBadgeClass(event.event_type)}`}>
-                            {event.event_type || 'Event'}
-                          </span>
-                          <span className="event-time">{time}</span>
+                          {/* Only show time if it exists */}
+                          {timeInfo && <span className="event-time">{timeInfo}</span>}
                         </div>
                         <h3>{event.event_name}</h3>
                         <p>{event.description}</p>
                         <div className="event-info">
-                          <div className="info-row">
+                          {/* <div className="info-row">
                             <i className="bi bi-tag"></i>
                             <span>Type: {event.event_type || 'General'}</span>
-                          </div>
+                          </div> */}
                           <div className="info-row">
                             <i className="bi bi-geo-alt"></i>
                             <span>{event.venue}</span>
                           </div>
-                          <div className="info-row">
-                            <i className="bi bi-calendar-event"></i>
-                            <span>
-                              <strong>Event Date:</strong> {fullDate} at {time}
-                            </span>
-                          </div>
+                          {/* Only show event date if it exists */}
+                          {dateInfo && (
+                            <div className="info-row">
+                              <i className="bi bi-calendar-event"></i>
+                              <span>
+                                <strong>Event Date:</strong> {dateInfo.fullDate}
+                                {timeInfo && ` at ${timeInfo}`}
+                              </span>
+                            </div>
+                          )}
+                          {/* Only show tentative date if it exists */}
                           {tentativeDateInfo && (
                             <div className="info-row">
                               <i className="bi bi-calendar-question"></i>
@@ -520,20 +527,24 @@ function Events() {
                 />
               </Form.Group>
 
-              {/* Display both dates in the registration modal */}
+              {/* Display both dates in the registration modal only if they exist */}
               {selectedEvent && (
                 <>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Event Date & Time</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={`${formatDate(selectedEvent.event_date_time).fullDate} at ${formatTime(selectedEvent.event_date_time)}`}
-                      readOnly
-                      className="bg-light"
-                    />
-                  </Form.Group>
+                  {/* Only show event date & time if they exist */}
+                  {formatDate(selectedEvent.event_date_time) && (
+                    <Form.Group className="mb-3">
+                      <Form.Label>Event Date & Time</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={`${formatDate(selectedEvent.event_date_time).fullDate}${formatTime(selectedEvent.event_date_time) ? ` at ${formatTime(selectedEvent.event_date_time)}` : ''}`}
+                        readOnly
+                        className="bg-light"
+                      />
+                    </Form.Group>
+                  )}
                   
-                  {selectedEvent.tentative_date && (
+                  {/* Only show tentative date if it exists */}
+                  {formatDate(selectedEvent.tentative_date) && (
                     <Form.Group className="mb-3">
                       <Form.Label>Tentative Date</Form.Label>
                       <Form.Control

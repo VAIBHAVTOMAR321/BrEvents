@@ -5,12 +5,13 @@ import Events from './Events'
 
 
 import WhyChoice from './WhyChoice'
+import EventCarousel from './EventCarousel'
 
 
 function Home() {
   return (
     <div className='main'>
-<Carousel />
+<EventCarousel />
 <AboutUs />
 <WhyChoice />
 {/* <FeaturedPrograms />

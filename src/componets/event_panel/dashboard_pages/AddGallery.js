@@ -152,7 +152,7 @@ const AddGallery = () => {
                           name="title"
                           value={formData.title}
                           onChange={handleChange}
-                          required
+                          
                         />
                       </Form.Group>
                       
