@@ -169,7 +169,7 @@ const AddCarousel = () => {
                         />
                       </Form.Group>
                       
-                      <Form.Group className="mb-3" controlId="description">
+                      {/* <Form.Group className="mb-3" controlId="description">
                         <Form.Label>Description</Form.Label>
                         <Form.Control
                           as="textarea"
@@ -179,7 +179,7 @@ const AddCarousel = () => {
                           value={formData.description}
                           onChange={handleChange}
                         />
-                      </Form.Group>
+                      </Form.Group> */}
                       
                       <Form.Group className="mb-4" controlId="image">
                         <Form.Label>Image</Form.Label>

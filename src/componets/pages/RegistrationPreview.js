@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Image, Badge, Alert, Button } from "react-bootstrap";
 import { FaTimes } from "react-icons/fa";
 import "../../assets/css/registration.css";
-import Logo from "../../assets/images/br-event-logo.png";
+import Logo from "../../assets/images/event_updated_logo.png";
 
 const RegistrationPreview = ({
   formData,
@@ -82,7 +82,7 @@ const RegistrationPreview = ({
     <>
       <div className="government-form-preview position-relative">
         {/* Watermark */}
-        <div className="watermark">BrEvent.com</div>
+        <div className="watermark">Brinfotainment.com</div>
 
         {/* Official Header with Emblem */}
         <div className="official-header text-center py-4 border-bottom border-dark">
@@ -510,6 +510,52 @@ const RegistrationPreview = ({
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Portfolio File - Only show if file is uploaded */}
+                  {hasValue(formData.portfolio_file) && (
+                    <div className="row mb-3">
+                      <div className="col-md-3">
+                        <label className="form-label font-weight-bold">
+                          Portfolio File:
+                        </label>
+                      </div>
+                      <div className="col-md-9">
+                        <div className="form-control-static">
+                          <p className="small mb-1">
+                            <i className="bi bi-file-earmark"></i> {formData.portfolio_file.name}
+                          </p>
+                          {formData.portfolio_file_preview && (
+                            <div className="mt-2">
+                              {formData.portfolio_file.name.toLowerCase().endsWith('.pdf') ? (
+                                <embed
+                                  src={formData.portfolio_file_preview}
+                                  type="application/pdf"
+                                  width="100%"
+                                  height="300px"
+                                  className="pdf-preview"
+                                />
+                              ) : formData.portfolio_file.name.toLowerCase().match(/\.(jpg|jpeg|png|gif)$/) ? (
+                                <img
+                                  src={formData.portfolio_file_preview}
+                                  alt="Portfolio Preview"
+                                  style={{
+                                    maxWidth: "200px",
+                                    maxHeight: "150px",
+                                    objectFit: "cover",
+                                    border: "1px solid #ccc",
+                                  }}
+                                />
+                              ) : (
+                                <div className="alert alert-info small">
+                                  Preview not available for this file type
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -638,11 +684,11 @@ const RegistrationPreview = ({
           <p className="mb-0 small mt-1">
             Visit us at:{" "}
             <a
-              href="https://brinfotainment.in/"
+              href="https://Brinfotainment.com.in/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              https://brinfotainment.in/
+              https://Brinfotainment.com.in/
             </a>
           </p>
         </div>
@@ -652,7 +698,7 @@ const RegistrationPreview = ({
       {fullscreenPreview.isOpen && (
         <div className="fullscreen-certificate-preview position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-90 d-flex flex-column z-index-9999">
           {/* Watermark for fullscreen preview */}
-          <div className="watermark-fullscreen">BrEvent.com</div>
+          <div className="watermark-fullscreen">Brinfotainment.com</div>
 
           <div className="d-flex justify-content-between align-items-center p-3 bg-white">
             <h4 className="mb-0">{fullscreenPreview.certificateLabel}</h4>
@@ -808,7 +854,7 @@ const RegistrationPreview = ({
 
           /* Ensure link appears in print */
           .form-footer a:after {
-            content: " (https://brinfotainment.in/)";
+            content: " (https://Brinfotainment.com.in/)";
             font-size: 0.8em;
           }
 

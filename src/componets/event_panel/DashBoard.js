@@ -4,7 +4,7 @@ import "../../assets/css/dashboard.css";
 import { useNavigate } from "react-router-dom";
 import { useAuthFetch } from "../context/AuthFetch";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../../assets/images/br-event-logo.png"
+import Logo from "../../assets/images/event_updated_logo.png"
 import {
   FaUserMd, FaPhone, FaEnvelope, FaHome, FaVenusMars, FaRulerVertical, FaWeight, FaCalendarAlt,
   FaHospital, FaStethoscope, FaNotesMedical, FaUserClock, FaInfoCircle, FaExclamationTriangle,
@@ -123,7 +123,7 @@ const RegistrationDetailsModal = ({ entry, onClose }) => {
       <div className="government-form-preview position-relative">
         {/* Watermark */}
         <div className="watermark">
-          BrEvent.com
+          Brinfotainment.com
         </div>
         
         {/* Official Header with Emblem */}
@@ -211,99 +211,159 @@ const RegistrationDetailsModal = ({ entry, onClose }) => {
             </div>
           </div>
 
-          {/* PERSONAL DETAILS Section */}
-          <div className="form-section mb-4">
-            <div className="section-header text-white p-2">
-              <h5 className="mb-0 font-weight-bold">PERSONAL DETAILS:</h5>
-            </div>
-            <div className="section-content border border-top-0 p-3">
-              {/* Candidate Name - Always show as it's required */}
-              <div className="row mb-3">
-                <div className="col-md-3">
-                  <label className="form-label font-weight-bold">Candidate Name</label>
-                </div>
-                <div className="col-md-9">
-                  <div className="form-control-static">{entry.full_name || 'N/A'}</div>
-                </div>
-              </div>
-              
-              {/* Address - Always show as it's required */}
-              <div className="row mb-3">
-                <div className="col-md-3">
-                  <label className="form-label font-weight-bold">Address:</label>
-                </div>
-                <div className="col-md-9">
-                  <div className="form-control-static">{entry.address || 'N/A'}</div>
-                </div>
-              </div>
-              
-              {/* Location - Always show as it's required */}
-              <div className="row mb-3">
-                <div className="col-md-3">
-                  <label className="form-label font-weight-bold">Location:</label>
-                </div>
-                <div className="col-md-9">
-                  <div className="form-control-static">{`${entry.city || 'N/A'}, ${entry.state || 'N/A'}, ${entry.country || 'N/A'}`}</div>
-                </div>
-              </div>
-              
-              {/* Telephone No - Only show if filled */}
-              {hasValue(entry.telephone) && (
-                <div className="row mb-3">
-                  <div className="col-md-3">
-                    <label className="form-label font-weight-bold">Telephone No:</label>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="form-control-static">{entry.telephone}</div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Mobile No - Always show as it's required */}
-              <div className="row mb-3">
-                <div className="col-md-3">
-                  <label className="form-label font-weight-bold">Mobile No:</label>
-                </div>
-                <div className="col-md-9">
-                  <div className="form-control-static">{entry.phone || 'N/A'}</div>
-                </div>
-              </div>
-              
-              {/* Email ID - Always show as it's required */}
-              <div className="row mb-3">
-                <div className="col-md-3">
-                  <label className="form-label font-weight-bold">Email ID:</label>
-                </div>
-                <div className="col-md-9">
-                  <div className="form-control-static">{entry.email || 'N/A'}</div>
-                </div>
-              </div>
-              
-              {/* Date of Birth - Only show if filled */}
-              {hasValue(entry.date_of_birth) && (
-                <div className="row mb-3">
-                  <div className="col-md-3">
-                    <label className="form-label font-weight-bold">Date of Birth:</label>
-                  </div>
-                  <div className="col-md-9">
-                    <div className="form-control-static">{formatDate(entry.date_of_birth)}</div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Gender - Only show if filled */}
-              {hasValue(entry.gender) && (
-                <div className="row mb-3">
-                  <div className="col-md-3">
-                    <label className="form-label font-weight-bold">Gender:</label>
-                  </div>
-                  <div className="col-md-9">
-                    <div className="form-control-static">{entry.gender}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+           {/* PERSONAL DETAILS Section */}
+           <div className="form-section mb-4">
+             <div className="section-header text-white p-2">
+               <h5 className="mb-0 font-weight-bold">PERSONAL DETAILS:</h5>
+             </div>
+             <div className="section-content border border-top-0 p-3">
+               {/* Candidate Name - Always show as it's required */}
+               <div className="row mb-3">
+                 <div className="col-md-3">
+                   <label className="form-label font-weight-bold">Candidate Name</label>
+                 </div>
+                 <div className="col-md-9">
+                   <div className="form-control-static">{entry.full_name || 'N/A'}</div>
+                 </div>
+               </div>
+               
+               {/* Address - Always show as it's required */}
+               <div className="row mb-3">
+                 <div className="col-md-3">
+                   <label className="form-label font-weight-bold">Address:</label>
+                 </div>
+                 <div className="col-md-9">
+                   <div className="form-control-static">{entry.address || 'N/A'}</div>
+                 </div>
+               </div>
+               
+               {/* Pin-code - Only show if filled */}
+               {hasValue(entry.pin_code) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Pin-code:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.pin_code}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Location - Always show as it's required */}
+               <div className="row mb-3">
+                 <div className="col-md-3">
+                   <label className="form-label font-weight-bold">Location:</label>
+                 </div>
+                 <div className="col-md-9">
+                   <div className="form-control-static">{`${entry.city || 'N/A'}, ${entry.state || 'N/A'}, ${entry.country || 'N/A'}`}</div>
+                 </div>
+               </div>
+               
+               {/* Telephone No - Only show if filled */}
+               {hasValue(entry.telephone) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Telephone No:</label>
+                   </div>
+                   <div className="col-md-4">
+                     <div className="form-control-static">{entry.telephone}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Mobile No - Always show as it's required */}
+               <div className="row mb-3">
+                 <div className="col-md-3">
+                   <label className="form-label font-weight-bold">Mobile No:</label>
+                 </div>
+                 <div className="col-md-9">
+                   <div className="form-control-static">{entry.phone || 'N/A'}</div>
+                 </div>
+               </div>
+               
+               {/* Email ID - Always show as it's required */}
+               <div className="row mb-3">
+                 <div className="col-md-3">
+                   <label className="form-label font-weight-bold">Email ID:</label>
+                 </div>
+                 <div className="col-md-9">
+                   <div className="form-control-static">{entry.email || 'N/A'}</div>
+                 </div>
+               </div>
+               
+               {/* Date of Birth - Only show if filled */}
+               {hasValue(entry.date_of_birth) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Date of Birth:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{formatDate(entry.date_of_birth)}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Gender - Only show if filled */}
+               {hasValue(entry.gender) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Gender:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.gender}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Aadhar No - Only show if filled */}
+               {hasValue(entry.aadhar_no) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Aadhar No:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.aadhar_no}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Highest Educational Qualification - Only show if filled */}
+               {hasValue(entry.highest_education) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Highest Educational Qualification:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.highest_education}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Other Educational Qualifications - Only show if filled */}
+               {hasValue(entry.other_education) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Other Educational Qualifications:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.other_education}</div>
+                   </div>
+                 </div>
+               )}
+               
+               {/* Experience - Only show if filled */}
+               {hasValue(entry.experience) && (
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Experience (if applicable):</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">{entry.experience}</div>
+                   </div>
+                 </div>
+               )}
+             </div>
+           </div>
 
           {/* Additional Information Section - Only show if any of these fields are filled */}
           {hasValue(entry.talent_scope) && entry.talent_scope.length > 0 && (
@@ -376,28 +436,91 @@ const RegistrationDetailsModal = ({ entry, onClose }) => {
             </div>
           )}
 
-          {/* Portfolio Links Section - Only show if any links are provided */}
-          {hasValue(entry.portfolio_links) && entry.portfolio_links.some(link => hasValue(link)) && (
-            <div className="form-section mb-4">
-              <div className="section-header text-white p-2">
-                <h5 className="mb-0 font-weight-bold">PORTFOLIO LINKS:</h5>
-              </div>
-              <div className="section-content border border-top-0 p-3">
-                <div className="row mb-3">
-                  <div className="col-md-3">
-                    <label className="form-label font-weight-bold">Portfolio:</label>
-                  </div>
-                  <div className="col-md-9">
-                    <div className="form-control-static">
-                      {entry.portfolio_links.map((link, index) => (
-                        hasValue(link) && <p key={index} className="small mb-1"><a href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noopener noreferrer">{link}</a></p>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+           {/* Portfolio Links Section - Only show if any links are provided */}
+           {hasValue(entry.portfolio_links) && entry.portfolio_links.some(link => hasValue(link)) && (
+             <div className="form-section mb-4">
+               <div className="section-header text-white p-2">
+                 <h5 className="mb-0 font-weight-bold">PORTFOLIO LINKS:</h5>
+               </div>
+               <div className="section-content border border-top-0 p-3">
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Portfolio:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">
+                       {entry.portfolio_links.map((link, index) => (
+                         hasValue(link) && <p key={index} className="small mb-1"><a href={link.startsWith('http') ? link : `https://${link}`} target="_blank" rel="noopener noreferrer">{link}</a></p>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           )}
+
+           {/* Portfolio File Section - Only show if portfolio file is provided */}
+           {hasValue(entry.portfolio_file) && (
+             <div className="form-section mb-4">
+               <div className="section-header text-white p-2">
+                 <h5 className="mb-0 font-weight-bold">PORTFOLIO FILE:</h5>
+               </div>
+               <div className="section-content border border-top-0 p-3">
+                 <div className="row mb-3">
+                   <div className="col-md-3">
+                     <label className="form-label font-weight-bold">Portfolio File:</label>
+                   </div>
+                   <div className="col-md-9">
+                     <div className="form-control-static">
+                       {(() => {
+                         const portfolioUrl = getImageUrl(entry.portfolio_file);
+                         if (portfolioUrl) {
+                           // Check if it's an image
+                           if (portfolioUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                             return (
+                               <Image
+                                 src={portfolioUrl}
+                                 alt="Portfolio"
+                                 className="img-fluid mb-2"
+                                 style={{ maxHeight: '200px', objectFit: 'cover' }}
+                                 onError={(e) => {
+                                   e.target.onerror = null;
+                                   e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%" y="50%" text-anchor="middle" dy=".3em"%3EPortfolio%3C/text%3E%3C/svg%3E';
+                                 }}
+                               />
+                             );
+                           } else if (portfolioUrl.match(/\.pdf$/i)) {
+                             // PDF file
+                             return (
+                               <div className="pdf-preview border p-3 d-inline-flex flex-column align-items-center">
+                                 <i className="bi bi-file-earmark-pdf" style={{ fontSize: '2.5rem', color: '#dc3545' }}></i>
+                                 <p className="mt-2 mb-0 small">PDF Portfolio</p>
+                                 <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary mt-2">
+                                   View PDF
+                                 </a>
+                               </div>
+                             );
+                           } else {
+                             // Other file type
+                             return (
+                               <div className="file-preview border p-3 d-inline-flex flex-column align-items-center">
+                                 <i className="bi bi-file-earmark" style={{ fontSize: '2.5rem' }}></i>
+                                 <p className="mt-2 mb-0 small">Portfolio File</p>
+                                 <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline-primary mt-2">
+                                   Download File
+                                 </a>
+                               </div>
+                             );
+                           }
+                         }
+                         return 'Portfolio file not available';
+                       })()}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           )}
 
           {/* Introduction Section - Only show if filled */}
           {hasValue(entry.introduction) && (
@@ -536,7 +659,7 @@ const RegistrationDetailsModal = ({ entry, onClose }) => {
         <div className="fullscreen-certificate-preview position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-90 d-flex flex-column z-index-9999">
           {/* Watermark for fullscreen preview */}
           <div className="watermark-fullscreen">
-            BrEvent.com
+            brinfotainment.com
           </div>
           
           <div className="d-flex justify-content-between align-items-center p-3 bg-white">

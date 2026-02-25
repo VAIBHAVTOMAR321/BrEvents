@@ -45,6 +45,8 @@ const Registration = ({
     social_media_links: [""],
     additional_links: [""],
     portfolio_links: [""],
+    portfolio_file: null,
+    portfolio_file_preview: "",
     // Certificate fields
     selected_certificates: [], // To track which certificates are selected
     national_level_certificate: null,
@@ -83,6 +85,7 @@ const Registration = ({
 
   // Ref for file inputs
   const fileInputRef = useRef(null);
+  const portfolioFileRef = useRef(null);
   const certificateFileRefs = {
     national_level_certificate: useRef(null),
     internation_level_certificate_award: useRef(null),
@@ -903,6 +906,27 @@ const Registration = ({
     }
   };
 
+  // Handle portfolio file change
+  const handlePortfolioFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        portfolio_file: file,
+      }));
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData((prev) => ({
+          ...prev,
+          portfolio_file_preview: e.target.result,
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   // Handle preview button click - validate form and submit
   const handlePreviewClick = async (e) => {
     e.preventDefault();
@@ -1015,6 +1039,45 @@ const Registration = ({
 
   // Get today's date in YYYY-MM-DD format for max attribute
   const today = new Date().toISOString().split("T")[0];
+
+  // Reusable API call with retry functionality
+  const fetchWithRetry = async (url, options, retries = 3, delay = 2000) => {
+    let lastError;
+    
+    for (let i = 0; i < retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          cache: "no-cache",
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Always return response, even if not ok - let caller handle error status
+        return response;
+        
+      } catch (error) {
+        lastError = error;
+        
+        // Only retry for certain error types
+        if (error.name === "AbortError" || error.message.includes("Failed to fetch") || error.message.includes("Network")) {
+          if (i < retries - 1) {
+            console.log(`Retrying request... Attempt ${i + 2} of ${retries}`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+        
+        throw error; // Re-throw non-retryable errors immediately
+      }
+    }
+    
+    throw lastError;
+  };
 
   // Check if links error is a string or array
   const getLinkError = (errorType, index) => {
@@ -1340,6 +1403,11 @@ const Registration = ({
         );
       }
 
+      // Add portfolio file
+      if (formData.portfolio_file) {
+        apiFormData.append("portfolio_file", formData.portfolio_file);
+      }
+
       // Add certificate files
       certificateOptions.forEach((option) => {
         if (formData[option.id]) {
@@ -1353,11 +1421,8 @@ const Registration = ({
         console.log(`${key}:`, value);
       }
 
-      // API call with timeout and proper error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-      const response = await fetch(
+      // API call with retry and proper error handling
+      const response = await fetchWithRetry(
         "https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/reg-user/",
         {
           method: "POST",
@@ -1365,12 +1430,11 @@ const Registration = ({
           headers: {
             Accept: "application/json",
           },
-          signal: controller.signal,
           mode: "cors", // Explicitly set CORS mode
         },
+        3, // 3 retry attempts
+        2000 // 2 second delay between retries
       );
-
-      clearTimeout(timeoutId);
 
       // Try to parse the response
       let data;
@@ -1393,7 +1457,29 @@ const Registration = ({
       // Check if response is OK
       if (!response.ok) {
         // Handle different error formats
-        if (data.message) {
+        if (data.email) {
+          // Check if this is the "Email already registered and verified" case
+          if (data.email === "Email already registered and verified.") {
+            // Set the already registered message
+            setAlreadyRegisteredMessage(data.email);
+            setIsSubmitting(false);
+
+            // Scroll to the email field
+            setTimeout(() => {
+              const emailField = document.querySelector('[name="email"]');
+              if (emailField) {
+                emailField.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                emailField.focus();
+              }
+            }, 100);
+
+            return;
+          }
+          throw new Error(data.email);
+        } else if (data.message) {
           // Check if this is the "Email not verified" case
           if (
             data.message === "Email not verified. Verification code resent."
@@ -1572,9 +1658,9 @@ const Registration = ({
       setApiError("");
 
       try {
-        // API call with timeout and proper error handling
+        // API call with increased timeout and proper error handling
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (increased from 30)
 
         // Changed to JSON format instead of FormData
         const response = await fetch(
@@ -1591,6 +1677,7 @@ const Registration = ({
             }),
             signal: controller.signal,
             mode: "cors", // Explicitly set CORS mode
+            cache: "no-cache", // Prevent caching
           },
         );
 
@@ -1635,6 +1722,10 @@ const Registration = ({
 
         // On success, fetch user_id using the registered email
         try {
+          // API call with timeout and proper error handling
+          const userIdController = new AbortController();
+          const userIdTimeoutId = setTimeout(() => userIdController.abort(), 60000); // 60 second timeout
+
           const userIdResponse = await fetch(
             `https://mahadevaaya.com/eventmanagement/eventmanagement_backend/api/get-userid/?email=${encodeURIComponent(registeredEmail)}`,
             {
@@ -1643,8 +1734,12 @@ const Registration = ({
                 Accept: "application/json",
               },
               mode: "cors",
+              cache: "no-cache",
+              signal: userIdController.signal,
             },
           );
+
+          clearTimeout(userIdTimeoutId);
 
           if (userIdResponse.ok) {
             const userIdData = await userIdResponse.json();
@@ -1698,9 +1793,9 @@ const Registration = ({
     setResendSuccess(false);
 
     try {
-      // API call with timeout and proper error handling
+      // API call with increased timeout and proper error handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout (increased from 30)
 
       // Updated to use the correct resend email OTP endpoint
       const response = await fetch(
@@ -1716,6 +1811,7 @@ const Registration = ({
           }),
           signal: controller.signal,
           mode: "cors", // Explicitly set CORS mode
+          cache: "no-cache", // Prevent caching
         },
       );
 
@@ -2442,6 +2538,26 @@ const Registration = ({
                                   {errors.portfolio_links}
                                 </div>
                               )}
+                            
+                            {/* Portfolio File Upload - Show only if portfolio links are filled */}
+                            <div className="mt-3">
+                              <Form.Label className="form-label-custom">
+                                Portfolio File
+                              </Form.Label>
+                              <Form.Control
+                                type="file"
+                                ref={portfolioFileRef}
+                                onChange={handlePortfolioFileChange}
+                                accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png"
+                                className="form-control-custom"
+                              />
+                              {formData.portfolio_file && (
+                                <div className="mt-2 text-sm text-success">
+                                  <i className="bi bi-check-circle me-1"></i>
+                                  {formData.portfolio_file.name} ({(formData.portfolio_file.size / 1024 / 1024).toFixed(2)} MB)
+                                </div>
+                              )}
+                            </div>
                           </Form.Group>
                         </Col>
 
