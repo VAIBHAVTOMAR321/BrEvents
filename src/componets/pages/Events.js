@@ -214,6 +214,17 @@ function Events() {
       setShowMessageModal(true);
       setShowSimplifiedRegistration(false);
       console.log('Registration successful:', data);
+      
+      // Open PDF in new tab if pass_pdf is present
+      if (data.pass_pdf) {
+        // Create full URL for the PDF
+        const pdfUrl = data.pass_pdf.startsWith('http') 
+          ? data.pass_pdf 
+          : `https://mahadevaaya.com/eventmanagement/eventmanagement_backend${data.pass_pdf}`;
+        
+        // Open PDF in new tab
+        window.open(pdfUrl, '_blank');
+      }
     } catch (err) {
       console.error('Error registering for event:', err);
       
